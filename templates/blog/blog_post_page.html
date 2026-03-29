@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block og_tags %}
+{% if page.featured_image %}{% image page.featured_image fill-1200x630 as og_img %}{% endif %}
+<meta property="og:title" content="{{ page.seo_title|default:page.title }}">
+<meta property="og:description" content="{{ page.search_description|default:page.intro }}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:site_name" content="Ideas Block">
+{% if og_img %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ page.seo_title|default:page.title }}">
+<meta name="twitter:description" content="{{ page.search_description|default:page.intro }}">
+{% if og_img %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}">{% endif %}
+{% endblock %}
+
+{% block content %}
+<article>
+  <!-- Header -->
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header__label">
+        <a href="/blog/" class="text-dim">Blog</a>
+        {% for cat in page.categories.all %}
+          &nbsp;/&nbsp;<a href="/blog/?category={{ cat.slug }}" class="text-dim">{{ cat.name }}</a>
+        {% endfor %}
+      </div>
+      <h1 class="page-header__title">{{ page.title }}</h1>
+      {% if page.intro %}
+        <p class="page-header__subtitle">{{ page.intro }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Featured image -->
+  {% if page.featured_image %}
+    <div class="container">
+      {% image page.featured_image width-1200 as img %}
+      <img src="{{ img.url }}" alt="{{ page.title }}" class="featured-image">
+    </div>
+  {% endif %}
+
+  <div class="container--narrow">
+    <!-- Meta bar -->
+    <div class="meta-bar">
+      {% if page.date %}
+        <span class="meta-bar__item"><strong>Date</strong> {{ page.date|date:"d F Y" }}</span>
+      {% endif %}
+      {% if page.tags.all %}
+        <span class="meta-bar__item">
+          {% for tag in page.tags.all %}
+            <a href="/blog/?tag={{ tag.slug }}" class="tag-pill">{{ tag.name }}</a>
+          {% endfor %}
+        </span>
+      {% endif %}
+      {% if page.language == 'lt' %}
+        <span class="tag-pill">Lietuvių</span>
+      {% endif %}
+    </div>
+
+    <!-- Body -->
+    <div class="prose">
+      {% for block in page.body %}
+        {% if block.block_type == 'paragraph' %}
+          {{ block.value|richtext }}
+        {% elif block.block_type == 'heading' %}
+          <h2>{{ block.value }}</h2>
+        {% elif block.block_type == 'image' %}
+          {% image block.value width-900 as img %}
+          <figure>
+            <img src="{{ img.url }}" alt="">
+          </figure>
+        {% elif block.block_type == 'quote' %}
+          <blockquote>
+            {{ block.value.text }}
+            {% if block.value.attribution %}
+              <footer>— {{ block.value.attribution }}</footer>
+            {% endif %}
+          </blockquote>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- Back link -->
+    <div class="mt-lg">
+      <a href="/blog/" class="text-dim text-upper">← Back to blog</a>
+    </div>
+  </div>
+</article>
+{% endblock %}

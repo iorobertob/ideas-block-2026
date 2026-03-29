@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block og_tags %}
+{% if page.featured_image %}{% image page.featured_image fill-1200x630 as og_img %}{% endif %}
+<meta property="og:title" content="{{ page.seo_title|default:page.title }}">
+<meta property="og:description" content="{{ page.search_description|default:page.intro }}">
+<meta property="og:type" content="event">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:site_name" content="Ideas Block">
+{% if og_img %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ page.seo_title|default:page.title }}">
+<meta name="twitter:description" content="{{ page.search_description|default:page.intro }}">
+{% if og_img %}<meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}">{% endif %}
+{% endblock %}
+
+{% block content %}
+<article>
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header__label"><a href="/events/" class="text-dim">Events</a></div>
+      <h1 class="page-header__title">{{ page.title }}</h1>
+      {% if page.intro %}
+        <p class="page-header__subtitle">{{ page.intro }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if page.featured_image %}
+    <div class="container">
+      {% image page.featured_image width-1200 as img %}
+      <img src="{{ img.url }}" alt="{{ page.title }}" class="featured-image">
+    </div>
+  {% endif %}
+
+  <div class="container--narrow">
+    <div class="meta-bar">
+      {% if page.start_date %}
+        <span class="meta-bar__item">
+          <strong>Date</strong>
+          {{ page.start_date|date:"l, d F Y" }}
+          {% if page.end_date and page.end_date != page.start_date %}
+            – {{ page.end_date|date:"d F Y" }}
+          {% endif %}
+        </span>
+      {% endif %}
+      {% if page.start_time %}
+        <span class="meta-bar__item"><strong>Time</strong> {{ page.start_time|time:"H:i" }}</span>
+      {% endif %}
+      {% if page.location %}
+        <span class="meta-bar__item"><strong>Location</strong> {{ page.location }}</span>
+      {% endif %}
+      {% if not page.is_free and page.price %}
+        <span class="meta-bar__item"><strong>Admission</strong> €{{ page.price }}</span>
+      {% elif page.is_free %}
+        <span class="meta-bar__item"><strong>Admission</strong> Free</span>
+      {% endif %}
+    </div>
+
+    {% if not page.is_past %}
+      {% if page.use_stripe %}
+        <div class="mb-lg">
+          <a href="{% url 'ticket_checkout' page.pk %}" class="ticket-btn">
+            Get tickets {% if not page.is_free and page.price %}· €{{ page.price }}{% endif %} →
+          </a>
+        </div>
+      {% elif page.ticket_url %}
+        <div class="mb-lg">
+          <a href="{{ page.ticket_url }}" target="_blank" rel="noopener"
+             style="display:inline-block; border:1px solid var(--text); color:var(--text); padding:0.75rem 2rem; font-size:0.75rem; letter-spacing:0.12em; text-transform:uppercase; transition:all 0.2s;">
+            Get tickets →
+          </a>
+        </div>
+      {% endif %}
+    {% endif %}
+
+    <div class="prose">
+      {% for block in page.body %}
+        {% if block.block_type == 'paragraph' %}
+          {{ block.value|richtext }}
+        {% elif block.block_type == 'heading' %}
+          <h2>{{ block.value }}</h2>
+        {% elif block.block_type == 'image' %}
+          {% image block.value width-900 as img %}
+          <figure><img src="{{ img.url }}" alt=""></figure>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="mt-lg">
+      <a href="/events/" class="text-dim text-upper">← Back to events</a>
+    </div>
+  </div>
+</article>
+{% endblock %}
