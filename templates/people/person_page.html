@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block og_tags %}
+{% if page.photo %}{% image page.photo fill-1200x630 as og_img %}{% endif %}
+<meta property="og:title" content="{{ page.title }}{% if page.role %} — {{ page.role }}{% endif %}">
+<meta property="og:description" content="{{ page.search_description|default:'' }}">
+<meta property="og:type" content="profile">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% if og_img %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="person-detail">
+    <!-- Portrait column -->
+    <div class="person-detail__photo">
+      {% if page.photo %}
+        {% image page.photo width-480 as img %}
+        <img src="{{ img.url }}" alt="{{ page.title }}" class="person-detail__img">
+      {% else %}
+        <div class="person-card__placeholder person-detail__placeholder">
+          <span>{{ page.title|slice:":1" }}</span>
+        </div>
+      {% endif %}
+
+      <!-- Links -->
+      <div class="person-detail__links">
+        {% if page.email %}
+          <a href="mailto:{{ page.email }}" class="person-detail__link">
+            <span class="text-upper text-muted">Email →</span>
+          </a>
+        {% endif %}
+        {% if page.website %}
+          <a href="{{ page.website }}" target="_blank" rel="noopener" class="person-detail__link">
+            <span class="text-upper text-muted">Website →</span>
+          </a>
+        {% endif %}
+        {% if page.instagram %}
+          <a href="https://instagram.com/{{ page.instagram }}" target="_blank" rel="noopener" class="person-detail__link">
+            <span class="text-upper text-muted">@{{ page.instagram }}</span>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Content column -->
+    <div class="person-detail__content">
+      <div class="page-header__label">
+        <a href="/people/" class="text-dim">People</a>
+      </div>
+      <h1 class="page-header__title" style="margin-bottom:0.4rem;">{{ page.title }}</h1>
+      {% if page.role %}
+        <p class="text-upper text-dim" style="font-size:0.75rem;letter-spacing:0.12em;margin-bottom:2.5rem;">{{ page.role }}</p>
+      {% endif %}
+
+      {% if page.bio %}
+        <div class="prose">
+          {{ page.bio|richtext }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% if related_posts %}
+<section class="section container" style="border-top:1px solid var(--border-soft);margin-top:var(--space-lg);">
+  <div class="section-header">
+    <div>
+      <span class="section-label">From the blog</span>
+      <h2 class="section-title">Latest posts</h2>
+    </div>
+    <a href="/blog/" class="section-link">All posts →</a>
+  </div>
+  <ul class="post-list">
+    {% for post in related_posts %}
+    <li class="post-list__item">
+      <a href="{% pageurl post %}" class="post-list__link">
+        <div class="post-list__date">{% if post.date %}{{ post.date|date:"d M Y" }}{% endif %}</div>
+        <div>
+          <div class="post-list__title">{{ post.title }}</div>
+          {% if post.intro %}<p class="post-list__excerpt">{{ post.intro|truncatechars:120 }}</p>{% endif %}
+        </div>
+        <div class="post-list__arrow">→</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

@@ -969,6 +969,53 @@ p:last-child { margin-bottom: 0; }
   }
 }
 
+/* ── Person detail page ───────────────────────────────────────── */
+.person-detail {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-lg);
+  align-items: start;
+  padding: var(--space-lg) 0;
+}
+
+.person-detail__img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.person-detail__placeholder {
+  aspect-ratio: 3 / 4;
+}
+
+.person-detail__links {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.person-detail__link {
+  display: block;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  transition: color 0.2s;
+}
+.person-detail__link:hover { color: var(--accent); }
+
+@media (max-width: 700px) {
+  .person-detail {
+    grid-template-columns: 1fr;
+    gap: var(--space-md);
+    padding: var(--space-md) 0;
+  }
+  .person-detail__img { max-width: 240px; }
+}
+
 /* ── Ticker CTA (homepage bottom bar) ─────────────────────────── */
 .ticker-bar {
   background: var(--surface);
