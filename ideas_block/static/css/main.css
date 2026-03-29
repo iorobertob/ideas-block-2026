@@ -699,6 +699,21 @@ p:last-child { margin-bottom: 0; }
   border-color: var(--text);
 }
 
+.filter-btn__count {
+  display: inline-block;
+  font-size: 0.6em;
+  background: var(--surface-2);
+  border-radius: 20px;
+  padding: 0.1em 0.5em;
+  margin-left: 0.3em;
+  color: var(--text-dim);
+  vertical-align: middle;
+}
+.filter-btn.active .filter-btn__count {
+  background: rgba(0,0,0,0.2);
+  color: rgba(255,255,255,0.7);
+}
+
 /* ── Search form ───────────────────────────────────────────────── */
 .search-form {
   display: flex;

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block title %}{% if search_query %}Search: {{ search_query }}{% else %}Search{% endif %} — Ideas Block{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Ideas Block</div>
+    <h1 class="page-header__title">Search</h1>
+  </div>
+
+  <form action="{% url 'search' %}" method="get" class="search-form">
+    <input type="text" name="query"{% if search_query %} value="{{ search_query }}"{% endif %}
+           placeholder="Search posts, events, projects, people…"
+           autofocus>
+    {% if filter_type != 'all' %}
+      <input type="hidden" name="type" value="{{ filter_type }}">
+    {% endif %}
+    <button type="submit">Search</button>
+    {% if search_query %}<a href="{% url 'search' %}" class="search-clear">✕ Clear</a>{% endif %}
+  </form>
+
+  {% if search_query %}
+  <!-- Type filter tabs -->
+  <div class="filter-bar" style="margin-bottom:2rem;">
+    <a href="?query={{ search_query|urlencode }}&type=all"
+       class="filter-btn {% if filter_type == 'all' %}active{% endif %}">
+       All <span class="filter-btn__count">{{ counts.all }}</span>
+    </a>
+    <a href="?query={{ search_query|urlencode }}&type=blog"
+       class="filter-btn {% if filter_type == 'blog' %}active{% endif %}">
+       Blog <span class="filter-btn__count">{{ counts.blog }}</span>
+    </a>
+    <a href="?query={{ search_query|urlencode }}&type=events"
+       class="filter-btn {% if filter_type == 'events' %}active{% endif %}">
+       Events <span class="filter-btn__count">{{ counts.events }}</span>
+    </a>
+    <a href="?query={{ search_query|urlencode }}&type=projects"
+       class="filter-btn {% if filter_type == 'projects' %}active{% endif %}">
+       Projects <span class="filter-btn__count">{{ counts.projects }}</span>
+    </a>
+    <a href="?query={{ search_query|urlencode }}&type=people"
+       class="filter-btn {% if filter_type == 'people' %}active{% endif %}">
+       People <span class="filter-btn__count">{{ counts.people }}</span>
+    </a>
+  </div>
+
+  {% if search_results %}
+  <ul class="post-list">
+    {% for result in search_results %}
+    <li class="post-list__item">
+      <a href="{% pageurl result %}" class="post-list__link">
+        <div class="post-list__date text-dim" style="min-width:7rem;">
+          {{ result.content_type.model|title }}
+        </div>
+        <div>
+          <div class="post-list__title">{{ result.title }}</div>
+          {% if result.search_description %}
+            <p class="post-list__excerpt">{{ result.search_description|truncatechars:160 }}</p>
+          {% endif %}
+        </div>
+        <div class="post-list__arrow">→</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <!-- Pagination -->
+  {% if search_results.paginator.num_pages > 1 %}
+  <div class="pagination">
+    {% if search_results.has_previous %}
+      <a href="?query={{ search_query|urlencode }}&type={{ filter_type }}&page={{ search_results.previous_page_number }}">← Prev</a>
+    {% endif %}
+    <span class="current">{{ search_results.number }} / {{ search_results.paginator.num_pages }}</span>
+    {% if search_results.has_next %}
+      <a href="?query={{ search_query|urlencode }}&type={{ filter_type }}&page={{ search_results.next_page_number }}">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% else %}
+  <p style="color:var(--text-dim);padding:2rem 0;">No results found for "{{ search_query }}"{% if filter_type != 'all' %} in {{ filter_type }}{% endif %}.</p>
+  {% endif %}
+  {% endif %}
+</div>
+{% endblock %}
