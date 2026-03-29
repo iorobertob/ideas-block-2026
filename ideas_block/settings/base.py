@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.contrib.sitemaps",
+    "wagtail.api.v2",
     "wagtail.contrib.table_block",
     "wagtail.embeds",
     "wagtail.sites",

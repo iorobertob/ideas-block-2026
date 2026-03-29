@@ -2,6 +2,7 @@ from django.conf import settings
 from django.urls import include, path
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
+from .api import api_router
 
 from wagtail.admin import urls as wagtailadmin_urls
 from wagtail import urls as wagtail_urls
@@ -25,6 +26,8 @@ urlpatterns = [
     path("core/", include(core_urls)),
     # Sitemap
     path("sitemap.xml", sitemap, {"sitemaps": {"wagtail": WagtailSitemap}}, name="sitemap"),
+    # Wagtail headless API
+    path("api/v2/", api_router.urls),
     # RSS / Atom feeds
     path("blog/feed/", LatestBlogFeed(), name="blog_feed"),
     path("blog/feed/atom/", LatestBlogAtomFeed(), name="blog_feed_atom"),
