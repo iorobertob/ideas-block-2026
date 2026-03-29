@@ -46,6 +46,9 @@
       <li><a href="/space/" {% if '/space/' in request.path %}class="active"{% endif %}>Space</a></li>
       <li><a href="/contact/" {% if '/contact/' in request.path %}class="active"{% endif %}>Contact</a></li>
       <li><a href="/open-calls/" {% if '/open-calls/' in request.path %}class="active"{% endif %}>Open Calls</a></li>
+      {% if request.user.is_authenticated %}
+      <li><a href="/members/dashboard/" {% if '/members/' in request.path %}class="active"{% endif %}>My Account</a></li>
+      {% endif %}
       <li><a href="/tickets/support/" class="nav-cta {% if '/tickets/support' in request.path %}active{% endif %}">Support</a></li>
       <li class="site-nav__lang">
         <a href="?lang=en" {% if LANGUAGE_CODE == 'en' %}class="active"{% endif %}>EN</a>

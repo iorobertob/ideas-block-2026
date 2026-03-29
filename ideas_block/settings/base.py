@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     "opencalls",
     "press",
     "publications",
+    "members",
     # Wagtail
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load wagtailimages_tags %}
+
+{% block title %}My account — Ideas Block{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Members</div>
+    <h1 class="page-header__title">
+      Welcome{% if request.user.first_name %}, {{ request.user.first_name }}{% endif %}
+    </h1>
+  </div>
+
+  <!-- Supporter status -->
+  <div class="member-status-card">
+    <div class="member-status-card__inner">
+      <div class="member-status-card__icon">
+        {% if member.is_active_supporter %}★{% else %}☆{% endif %}
+      </div>
+      <div>
+        <div class="member-status-card__label">Supporter status</div>
+        {% if member.is_active_supporter %}
+          <div class="member-status-card__plan">{{ member.plan_display }}</div>
+          <div class="member-status-card__thanks" style="color:var(--accent);font-size:0.8rem;margin-top:0.3rem;">
+            Thank you for supporting Ideas Block. ♥
+          </div>
+        {% else %}
+          <div class="member-status-card__plan" style="color:var(--text-dim);">Not a supporter</div>
+          <div style="margin-top:0.75rem;">
+            <a href="/tickets/support/" class="ticket-btn ticket-btn--accent" style="display:inline-block;padding:0.5rem 1.25rem;">Become a supporter →</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Account info -->
+  <section class="section" style="margin-top:var(--space-lg);">
+    <div class="section-label">Account</div>
+    <div class="member-account-row">
+      <span style="color:var(--text-muted);">Email</span>
+      <span>{{ request.user.email }}</span>
+    </div>
+    <div class="member-account-row">
+      <span style="color:var(--text-muted);">Member since</span>
+      <span>{{ member.joined_at|date:"d F Y" }}</span>
+    </div>
+  </section>
+
+  <!-- Order history -->
+  {% if orders %}
+  <section class="section" style="margin-top:var(--space-lg);">
+    <div class="section-label">History</div>
+    <h2 class="section-title" style="margin-bottom:1.5rem;">Your tickets &amp; orders</h2>
+    <ul class="post-list">
+      {% for order in orders %}
+      <li class="post-list__item">
+        <div class="post-list__link" style="cursor:default;">
+          <div class="post-list__date">
+            {{ order.created_at|date:"d M Y" }}<br>
+            <span class="tag-pill {% if order.status == 'paid' %}tag-pill--active{% endif %}">
+              {{ order.status|title }}
+            </span>
+          </div>
+          <div>
+            <div class="post-list__title">{{ order.product_title }}</div>
+            <p class="post-list__excerpt">
+              {{ order.quantity }} × €{{ order.unit_price }}
+              {% if order.product_sku %} · {{ order.product_sku }}{% endif %}
+            </p>
+          </div>
+          <div style="color:var(--accent);font-family:var(--font-display);font-size:1.1rem;">
+            €{{ order.total }}
+          </div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <section class="section" style="margin-top:var(--space-lg);">
+    <div class="section-label">History</div>
+    <p style="color:var(--text-dim);padding:1.5rem 0;">No orders yet. Check out our <a href="/events/">upcoming events</a> or <a href="/shop/">shop</a>.</p>
+  </section>
+  {% endif %}
+
+  <!-- Sign out -->
+  <section class="section" style="margin-top:var(--space-lg);border-top:1px solid var(--border-soft);padding-top:var(--space-md);">
+    <form method="post" action="{% url 'member_logout' %}">
+      {% csrf_token %}
+      <button type="submit" style="font-size:0.72rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);background:none;border:none;cursor:pointer;padding:0;">Sign out</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

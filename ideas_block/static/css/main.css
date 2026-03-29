@@ -1317,6 +1317,105 @@ p:last-child { margin-bottom: 0; }
   color: var(--bg);
 }
 
+/* ── Auth forms (login, register) ─────────────────────────────── */
+.auth-form {
+  max-width: 440px;
+  margin: 0 auto;
+  padding: var(--space-lg) 0;
+}
+.auth-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+.auth-form__field label {
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.auth-form__field input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.auth-form__field input:focus { border-color: var(--accent); }
+.auth-form__btn {
+  width: 100%;
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 0.5rem;
+}
+.auth-form__btn:hover { background: var(--accent); }
+.auth-form__error {
+  background: rgba(201,79,79,0.1);
+  border: 1px solid var(--red);
+  color: var(--red);
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+.auth-form__footer {
+  margin-top: 2rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+.auth-form__footer a { color: var(--accent); }
+
+/* ── Member dashboard ─────────────────────────────────────────── */
+.member-status-card {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  padding: 2rem;
+  margin-top: var(--space-md);
+}
+.member-status-card__inner {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+.member-status-card__icon {
+  font-size: 2.5rem;
+  color: var(--accent);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.member-status-card__label {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.3rem;
+}
+.member-status-card__plan {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 400;
+}
+.member-account-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 0.85rem;
+}
+
 /* ── Mobile nav toggle button ──────────────────────────────────── */
 .nav-toggle {
   display: none;

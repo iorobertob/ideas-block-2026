@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in — Ideas Block{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="auth-form">
+    <div class="page-header">
+      <div class="page-header__label">Members</div>
+      <h1 class="page-header__title">Sign in</h1>
+    </div>
+
+    {% if error %}
+      <div class="auth-form__error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" action="">
+      {% csrf_token %}
+      <div class="auth-form__field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email">
+      </div>
+      <div class="auth-form__field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="auth-form__btn">Sign in</button>
+    </form>
+
+    <div class="auth-form__footer">
+      <p>Not a member yet? <a href="/members/register/">Create an account</a> or
+        <a href="/tickets/support/">become a supporter</a>.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -12,6 +12,7 @@ from search import views as search_views
 
 from tickets import urls as tickets_urls
 from core import urls as core_urls
+from members import urls as members_urls
 from blog.feeds import LatestBlogFeed, LatestBlogAtomFeed
 from events.feeds import UpcomingEventsFeed, UpcomingEventsAtomFeed
 from django.contrib.sitemaps.views import sitemap
@@ -24,6 +25,7 @@ urlpatterns = [
     path("search/", search_views.search, name="search"),
     path("tickets/", include(tickets_urls)),
     path("core/", include(core_urls)),
+    path("members/", include(members_urls)),
     # Sitemap
     path("sitemap.xml", sitemap, {"sitemaps": {"wagtail": WagtailSitemap}}, name="sitemap"),
     # Wagtail headless API
