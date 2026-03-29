@@ -10,6 +10,8 @@ from search import views as search_views
 
 from tickets import urls as tickets_urls
 from core import urls as core_urls
+from blog.feeds import LatestBlogFeed, LatestBlogAtomFeed
+from events.feeds import UpcomingEventsFeed, UpcomingEventsAtomFeed
 
 urlpatterns = [
     path("django-admin/", admin.site.urls),
@@ -18,6 +20,11 @@ urlpatterns = [
     path("search/", search_views.search, name="search"),
     path("tickets/", include(tickets_urls)),
     path("core/", include(core_urls)),
+    # RSS / Atom feeds
+    path("blog/feed/", LatestBlogFeed(), name="blog_feed"),
+    path("blog/feed/atom/", LatestBlogAtomFeed(), name="blog_feed_atom"),
+    path("events/feed/", UpcomingEventsFeed(), name="events_feed"),
+    path("events/feed/atom/", UpcomingEventsAtomFeed(), name="events_feed_atom"),
 ]
 
 
