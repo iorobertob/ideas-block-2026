@@ -26,6 +26,8 @@ urlpatterns = [
     path("tickets/", include(tickets_urls)),
     path("core/", include(core_urls)),
     path("members/", include(members_urls)),
+    # Language switcher — POST to /i18n/set_language/ with next + language
+    path("i18n/", include("django.conf.urls.i18n")),
     # Sitemap
     path("sitemap.xml", sitemap, {"sitemaps": {"wagtail": WagtailSitemap}}, name="sitemap"),
     # Wagtail headless API
@@ -41,12 +43,19 @@ urlpatterns = [
 if settings.DEBUG:
     from django.conf.urls.static import static
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+    from django.shortcuts import render as _render
 
     # Serve static and media files from development server
     urlpatterns += staticfiles_urlpatterns()
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Preview custom error pages in dev
+    urlpatterns += [
+        path("__404__/", lambda r: _render(r, "404.html", status=404)),
+        path("__500__/", lambda r: _render(r, "500.html", status=500)),
+    ]
 
 urlpatterns = urlpatterns + i18n_patterns(
     # Wagtail page serving with optional locale prefix (/lt/..., /en/..., or /)
     path("", include(wagtail_urls)),
+    prefix_default_language=False,  # /en/ prefix NOT required for default language
 )

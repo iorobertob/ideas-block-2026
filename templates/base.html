@@ -1,4 +1,4 @@
-{% load static wagtailcore_tags wagtailimages_tags %}
+{% load static wagtailcore_tags wagtailimages_tags i18n %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE|default:'en' }}">
 <head>
@@ -51,9 +51,20 @@
       {% endif %}
       <li><a href="/tickets/support/" class="nav-cta {% if '/tickets/support' in request.path %}active{% endif %}">Support</a></li>
       <li class="site-nav__lang">
-        <a href="?lang=en" {% if LANGUAGE_CODE == 'en' %}class="active"{% endif %}>EN</a>
+        {% get_current_language as CURRENT_LANG %}
+        <form method="post" action="{% url 'set_language' %}" style="display:inline;">
+          {% csrf_token %}
+          <input name="next" type="hidden" value="{{ request.path }}">
+          <input name="language" type="hidden" value="en">
+          <button type="submit" class="lang-btn {% if CURRENT_LANG == 'en' %}active{% endif %}">EN</button>
+        </form>
         <span>/</span>
-        <a href="?lang=lt" {% if LANGUAGE_CODE == 'lt' %}class="active"{% endif %}>LT</a>
+        <form method="post" action="{% url 'set_language' %}" style="display:inline;">
+          {% csrf_token %}
+          <input name="next" type="hidden" value="{{ request.path }}">
+          <input name="language" type="hidden" value="lt">
+          <button type="submit" class="lang-btn {% if CURRENT_LANG == 'lt' %}active{% endif %}">LT</button>
+        </form>
       </li>
     </ul>
 
@@ -80,9 +91,20 @@
     <li><a href="/open-calls/">Open Calls</a></li>
     <li><a href="/tickets/support/" class="mobile-nav__support">Support us</a></li>
     <li class="mobile-nav__lang">
-      <a href="?lang=en">EN</a>
+      {% get_current_language as CURRENT_LANG %}
+      <form method="post" action="{% url 'set_language' %}" style="display:inline;">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.path }}">
+        <input name="language" type="hidden" value="en">
+        <button type="submit" class="lang-btn {% if CURRENT_LANG == 'en' %}active{% endif %}">EN</button>
+      </form>
       <span>/</span>
-      <a href="?lang=lt">LT</a>
+      <form method="post" action="{% url 'set_language' %}" style="display:inline;">
+        {% csrf_token %}
+        <input name="next" type="hidden" value="{{ request.path }}">
+        <input name="language" type="hidden" value="lt">
+        <button type="submit" class="lang-btn {% if CURRENT_LANG == 'lt' %}active{% endif %}">LT</button>
+      </form>
     </li>
   </ul>
 </div>

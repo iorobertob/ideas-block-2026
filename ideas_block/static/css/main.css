@@ -183,6 +183,22 @@ p:last-child { margin-bottom: 0; }
 .site-nav__lang a:hover { color: var(--accent); }
 .site-nav__lang span { color: var(--border); }
 
+/* Language switcher buttons (replace <a> tags, same style) */
+.lang-btn {
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--transition);
+}
+.lang-btn.active,
+.lang-btn:hover { color: var(--accent); }
+
 .nav-cta {
   font-size: 0.65rem;
   letter-spacing: 0.12em;
