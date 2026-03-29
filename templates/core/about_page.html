@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags wagtaildocs_tags %}
+
+{% block og_tags %}
+{% if page.hero_image %}{% image page.hero_image fill-1200x630 as og_img %}{% endif %}
+<meta property="og:title" content="{{ page.seo_title|default:page.title }}">
+<meta property="og:description" content="{{ page.search_description|default:page.intro }}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% if og_img %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+{% if page.hero_image %}
+  <div class="about-hero">
+    {% image page.hero_image fill-1600x700 as hero %}
+    <img src="{{ hero.url }}" alt="{{ page.title }}" class="about-hero__img">
+    <div class="about-hero__overlay"></div>
+    <div class="about-hero__title container">
+      <h1 class="page-header__title" style="color:#fff;">{{ page.title }}</h1>
+      {% if page.intro %}
+        <p style="color:rgba(255,255,255,0.75);font-size:1.1rem;max-width:600px;line-height:1.7;margin-top:1rem;">{{ page.intro }}</p>
+      {% endif %}
+    </div>
+  </div>
+{% else %}
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header__label">Ideas Block</div>
+      <h1 class="page-header__title">{{ page.title }}</h1>
+      {% if page.intro %}
+        <p class="page-header__subtitle">{{ page.intro }}</p>
+      {% endif %}
+    </div>
+  </div>
+{% endif %}
+
+<!-- Body -->
+<div class="container--narrow">
+  <div class="prose about-body">
+    {% for block in page.body %}
+      {% if block.block_type == 'paragraph' %}
+        {{ block.value|richtext }}
+      {% elif block.block_type == 'heading' %}
+        <h2>{{ block.value }}</h2>
+      {% elif block.block_type == 'image' %}
+        {% image block.value.image width-900 as img %}
+        <figure>
+          <img src="{{ img.url }}" alt="{{ block.value.caption }}">
+          {% if block.value.caption %}<figcaption>{{ block.value.caption }}</figcaption>{% endif %}
+        </figure>
+      {% elif block.block_type == 'annual_report' %}
+        <div class="annual-report-block">
+          <span class="annual-report-block__year">{{ block.value.year }}</span>
+          <span>{{ block.value.title }}</span>
+          {% if block.value.document %}
+            <a href="{% url 'wagtaildocs_serve' block.value.document.id block.value.document.filename %}"
+               class="annual-report-block__link" download>Download PDF ↓</a>
+          {% elif block.value.url %}
+            <a href="{{ block.value.url }}" target="_blank" rel="noopener"
+               class="annual-report-block__link">View →</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Funders -->
+{% if page.funders %}
+<section class="section container" style="border-top:1px solid var(--border-soft);margin-top:var(--space-xl);">
+  <div class="section-label">Support</div>
+  <h2 class="section-title">Funders &amp; partners</h2>
+  <div class="funders-grid">
+    {% for block in page.funders %}
+      {% if block.block_type == 'funder' %}
+      <div class="funder-card">
+        {% if block.value.url %}
+          <a href="{{ block.value.url }}" target="_blank" rel="noopener" class="funder-card__inner">
+        {% else %}
+          <div class="funder-card__inner">
+        {% endif %}
+          {% if block.value.logo %}
+            {% image block.value.logo max-200x80 as logo %}
+            <img src="{{ logo.url }}" alt="{{ block.value.name }}" class="funder-card__logo">
+          {% else %}
+            <div class="funder-card__name">{{ block.value.name }}</div>
+          {% endif %}
+          {% if block.value.description %}
+            <div class="funder-card__desc">{{ block.value.description }}</div>
+          {% endif %}
+        {% if block.value.url %}</a>{% else %}</div>{% endif %}
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}
