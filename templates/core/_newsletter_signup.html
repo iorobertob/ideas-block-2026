@@ -1,0 +1,40 @@
+<div class="newsletter-signup" id="newsletter-signup">
+  <form class="newsletter-signup__form" id="newsletter-form"
+        action="{% url 'newsletter_signup' %}" method="post">
+    {% csrf_token %}
+    <label for="newsletter-email" class="newsletter-signup__label">
+      Stay in the loop — subscribe to our newsletter
+    </label>
+    <div class="newsletter-signup__row">
+      <input type="email" id="newsletter-email" name="email"
+             placeholder="your@email.com"
+             class="newsletter-signup__input"
+             required autocomplete="email">
+      <button type="submit" class="newsletter-signup__btn">Subscribe</button>
+    </div>
+    <p class="newsletter-signup__msg" id="newsletter-msg" aria-live="polite"></p>
+  </form>
+</div>
+
+<script>
+(function () {
+  var form = document.getElementById('newsletter-form');
+  var msg  = document.getElementById('newsletter-msg');
+  if (!form) return;
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var data = new FormData(form);
+    fetch(form.action, { method: 'POST', body: data })
+      .then(function (r) { return r.json(); })
+      .then(function (json) {
+        msg.textContent = json.message || json.error || '';
+        msg.style.color = json.ok ? 'var(--accent)' : 'var(--danger)';
+        if (json.ok) form.reset();
+      })
+      .catch(function () {
+        msg.textContent = 'Something went wrong. Please try again.';
+        msg.style.color = 'var(--danger)';
+      });
+  });
+}());
+</script>
