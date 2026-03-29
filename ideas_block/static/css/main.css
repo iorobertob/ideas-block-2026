@@ -1443,6 +1443,89 @@ p:last-child { margin-bottom: 0; }
 .sr-only     { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0; }
 
 /* ── Support CTA section ───────────────────────────────────────── */
+/* ── Press page ───────────────────────────────────────────────── */
+.press-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 1rem;
+}
+.press-contact__name {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 400;
+}
+.press-contact__email {
+  font-size: 0.85rem;
+  color: var(--accent);
+}
+.press-contact__phone { font-size: 0.85rem; color: var(--text-muted); }
+
+.press-downloads {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid var(--border-soft);
+}
+.press-downloads__item + .press-downloads__item {
+  border-top: 1px solid var(--border-soft);
+}
+.press-downloads__link {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  color: var(--text);
+  transition: background 0.2s;
+}
+.press-downloads__link:hover { background: var(--surface); }
+.press-downloads__icon {
+  font-size: 1.2rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.press-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-sm);
+}
+.press-img-card img {
+  width: 100%;
+  display: block;
+  filter: saturate(0.7);
+  transition: filter 0.3s;
+}
+.press-img-card:hover img { filter: saturate(1); }
+.press-img-card__caption {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  padding: 0.5rem 0;
+  line-height: 1.5;
+}
+
+.press-boilerplate {
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  padding: 2rem;
+  position: relative;
+}
+.press-copy-btn {
+  margin-top: 1.5rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.5rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.press-copy-btn:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
 /* ── Open Calls ────────────────────────────────────────────────── */
 .open-calls-grid {
   display: grid;

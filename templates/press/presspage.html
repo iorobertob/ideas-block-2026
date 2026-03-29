@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags wagtaildocs_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Ideas Block</div>
+    <h1 class="page-header__title">Press</h1>
+    {% if page.intro %}
+      <div class="page-header__subtitle prose">{{ page.intro|richtext }}</div>
+    {% endif %}
+  </div>
+
+  <!-- Press contact -->
+  {% if page.press_contact_email or page.press_contact_name %}
+  <section class="section">
+    <div class="section-label">Press contact</div>
+    <div class="press-contact">
+      {% if page.press_contact_name %}
+        <div class="press-contact__name">{{ page.press_contact_name }}</div>
+      {% endif %}
+      {% if page.press_contact_email %}
+        <a href="mailto:{{ page.press_contact_email }}" class="press-contact__email">
+          {{ page.press_contact_email }}
+        </a>
+      {% endif %}
+      {% if page.press_contact_phone %}
+        <div class="press-contact__phone">{{ page.press_contact_phone }}</div>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Press kits / downloads -->
+  {% if page.press_kits %}
+  <section class="section">
+    <div class="section-label">Downloads</div>
+    <h2 class="section-title">Press kits &amp; assets</h2>
+    <ul class="press-downloads">
+      {% for block in page.press_kits %}
+        {% if block.block_type == 'kit' %}
+        <li class="press-downloads__item">
+          <a href="{% url 'wagtaildocs_serve' block.value.document.id block.value.document.filename %}"
+             class="press-downloads__link" download>
+            <span class="press-downloads__icon">↓</span>
+            <span>
+              <strong>{{ block.value.title }}</strong>
+              {% if block.value.description %}
+                <br><small style="color:var(--text-muted);">{{ block.value.description }}</small>
+              {% endif %}
+            </span>
+          </a>
+        </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+
+  <!-- Press images -->
+  {% if page.press_images %}
+  <section class="section">
+    <div class="section-label">Images</div>
+    <h2 class="section-title">Press images</h2>
+    <div class="press-images-grid">
+      {% for block in page.press_images %}
+        {% if block.block_type == 'image' %}
+          {% image block.value.image width-600 as img %}
+          <div class="press-img-card">
+            <img src="{{ img.url }}" alt="{{ block.value.caption }}" loading="lazy">
+            <div class="press-img-card__caption">
+              {{ block.value.caption }}
+              {% if block.value.credit %}
+                <span style="color:var(--text-dim);">© {{ block.value.credit }}</span>
+              {% endif %}
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Boilerplate -->
+  {% if page.boilerplate %}
+  <section class="section">
+    <div class="section-label">About</div>
+    <h2 class="section-title">About Ideas Block</h2>
+    <div class="press-boilerplate">
+      <div class="prose">{{ page.boilerplate|richtext }}</div>
+      <button class="press-copy-btn" onclick="
+        navigator.clipboard.writeText(document.querySelector('.press-boilerplate .prose').innerText);
+        this.textContent='Copied!';
+        setTimeout(()=>this.textContent='Copy text',2000);
+      ">Copy text</button>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Coverage log -->
+  {% if page.coverage %}
+  <section class="section">
+    <div class="section-label">Coverage</div>
+    <h2 class="section-title">In the press</h2>
+    <ul class="post-list">
+      {% for block in page.coverage %}
+        {% if block.block_type == 'article' %}
+        <li class="post-list__item">
+          {% if block.value.url %}
+          <a href="{{ block.value.url }}" target="_blank" rel="noopener" class="post-list__link">
+          {% else %}
+          <div class="post-list__link">
+          {% endif %}
+            <div class="post-list__date">
+              {% if block.value.date %}{{ block.value.date|date:"d M Y" }}{% endif %}
+              {% if block.value.language %}<br><span class="tag-pill">{{ block.value.language }}</span>{% endif %}
+            </div>
+            <div>
+              <div class="post-list__title">{{ block.value.headline }}</div>
+              <p class="post-list__excerpt">{{ block.value.publication }}</p>
+            </div>
+            {% if block.value.url %}<div class="post-list__arrow">→</div>{% endif %}
+          {% if block.value.url %}</a>{% else %}</div>{% endif %}
+        </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
