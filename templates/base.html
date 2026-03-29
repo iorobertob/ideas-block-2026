@@ -24,6 +24,9 @@
 
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
   {% block extra_css %}{% endblock %}
+  {% if PLAUSIBLE_DOMAIN %}
+  <script defer data-domain="{{ PLAUSIBLE_DOMAIN }}" src="https://plausible.io/js/script.js"></script>
+  {% endif %}
 </head>
 <body>
 

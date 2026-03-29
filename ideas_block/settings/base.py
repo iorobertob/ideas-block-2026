@@ -72,6 +72,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "ideas_block.context_processors.analytics",
             ],
         },
     },
@@ -218,6 +219,11 @@ WAGTAILADMIN_BASE_URL = "http://example.com"
 # if untrusted users are allowed to upload files -
 # see https://docs.wagtail.org/en/stable/advanced_topics/deploying.html#user-uploaded-files
 WAGTAILDOCS_EXTENSIONS = ['csv', 'docx', 'key', 'odt', 'pdf', 'pptx', 'rtf', 'txt', 'xlsx', 'zip']
+
+# ── Analytics ─────────────────────────────────────────────────────────────────
+# Plausible Analytics — privacy-first, GDPR-compliant, no cookies, no consent banner.
+# Set to your domain (e.g. "ideas-block.com") to enable. Leave blank to disable.
+PLAUSIBLE_DOMAIN = os.environ.get("PLAUSIBLE_DOMAIN", "")
 
 # ── Newsletter (MailerLite) ───────────────────────────────────────────────────
 MAILERLITE_API_KEY = os.environ.get("MAILERLITE_API_KEY", "")
