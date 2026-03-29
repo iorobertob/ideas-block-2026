@@ -767,6 +767,31 @@ p:last-child { margin-bottom: 0; }
   color: var(--accent);
 }
 
+.tag-pill--active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(201,185,154,0.08);
+}
+
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+}
+
+.tag-cloud__clear {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border: 1px solid var(--border-soft);
+  padding: 0.25em 0.6em;
+  transition: all 0.2s;
+}
+.tag-cloud__clear:hover { color: var(--red); border-color: var(--red); }
+
 /* ── Featured image ────────────────────────────────────────────── */
 .featured-image {
   width: 100%;

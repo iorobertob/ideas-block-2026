@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Ideas Block</div>
+    <h1 class="page-header__title">Blog</h1>
+    {% if page.intro %}
+      <p class="page-header__subtitle">{{ page.intro }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Search -->
+  <form method="get" class="search-form">
+    <input type="search" name="q" value="{{ query }}" placeholder="Search posts…"
+>
+    {% if request.GET.category %}<input type="hidden" name="category" value="{{ request.GET.category }}">{% endif %}
+    {% if request.GET.lang %}<input type="hidden" name="lang" value="{{ request.GET.lang }}">{% endif %}
+    <button type="submit">Search</button>
+    {% if query %}<a href="?" class="search-clear">✕ Clear</a>{% endif %}
+  </form>
+
+  <!-- Category + Language filters -->
+  <div class="filter-bar">
+    <a href="?" class="filter-btn {% if not request.GET.category and not request.GET.tag and not request.GET.year and not request.GET.lang %}active{% endif %}">All</a>
+    {% for cat in categories %}
+      <a href="?category={{ cat.slug }}"
+         class="filter-btn {% if request.GET.category == cat.slug %}active{% endif %}">{{ cat.name }}</a>
+    {% endfor %}
+    <a href="?lang=en" class="filter-btn {% if request.GET.lang == 'en' %}active{% endif %}">EN</a>
+    <a href="?lang=lt" class="filter-btn {% if request.GET.lang == 'lt' %}active{% endif %}">LT</a>
+  </div>
+
+  <!-- Tag cloud -->
+  {% if tags %}
+  <div class="tag-cloud">
+    {% if request.GET.tag %}<a href="?" class="tag-cloud__clear">✕ Clear tag</a>{% endif %}
+    {% for t in tags %}
+      <a href="?tag={{ t.slug }}"
+         class="tag-pill {% if request.GET.tag == t.slug %}tag-pill--active{% endif %}">{{ t.name }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Year filter -->
+  {% if years %}
+  <div class="filter-bar" style="margin-top:-0.5rem;">
+    {% for y in years %}
+      <a href="?year={{ y|date:'Y' }}" class="filter-btn {% if request.GET.year == y|date:'Y' %}active{% endif %}">{{ y|date:"Y" }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Post list -->
+  <ul class="post-list">
+    {% for post in posts %}
+    <li class="post-list__item">
+      <a href="{% pageurl post %}" class="post-list__link">
+        <div class="post-list__date">
+          {% if post.date %}{{ post.date|date:"d M Y" }}{% endif %}
+          {% if post.language == 'lt' %}<br><span class="tag-pill">LT</span>{% endif %}
+        </div>
+        <div>
+          <div class="post-list__title">{{ post.title }}</div>
+          {% if post.intro %}
+            <p class="post-list__excerpt">{{ post.intro|truncatechars:160 }}</p>
+          {% endif %}
+        </div>
+        <div class="post-list__arrow">→</div>
+      </a>
+    </li>
+    {% empty %}
+    <li style="padding: 2rem 0; color: var(--text-dim);">No posts found.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
