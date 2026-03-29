@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Ideas Block</div>
+    <h1 class="page-header__title">Publications</h1>
+    {% if page.intro %}
+      <p class="page-header__subtitle">{{ page.intro }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Search -->
+  <form method="get" class="search-form">
+    <input type="search" name="q" value="{{ query }}" placeholder="Search publications…">
+    <button type="submit">Search</button>
+    {% if query %}<a href="?" class="search-clear">✕ Clear</a>{% endif %}
+  </form>
+
+  <!-- Filters -->
+  {% if years or pub_types %}
+  <div class="filter-bar">
+    <a href="?" class="filter-btn {% if not request.GET.year and not request.GET.type %}active{% endif %}">All</a>
+    {% for t in pub_types %}
+      <a href="?type={{ t }}" class="filter-btn {% if request.GET.type == t %}active{% endif %}">{{ t|title }}</a>
+    {% endfor %}
+  </div>
+  {% if years %}
+  <div class="filter-bar" style="margin-top:-0.5rem;">
+    {% for y in years %}
+      <a href="?year={{ y }}" class="filter-btn {% if request.GET.year == y|stringformat:'s' %}active{% endif %}">{{ y }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <!-- Grid of covers -->
+  <div class="pub-grid">
+    {% for pub in publications %}
+    <a href="{% pageurl pub %}" class="pub-card">
+      <div class="pub-card__cover">
+        {% if pub.cover_image %}
+          {% image pub.cover_image fill-300x420 as cover %}
+          <img src="{{ cover.url }}" alt="{{ pub.title }}" loading="lazy">
+        {% else %}
+          <div class="pub-card__no-cover">
+            <span>{{ pub.title|truncatechars:40 }}</span>
+          </div>
+        {% endif %}
+      </div>
+      <div class="pub-card__meta">
+        {% if pub.pub_type %}
+          <div class="pub-card__type">{{ pub.get_pub_type_display }}</div>
+        {% endif %}
+        <div class="pub-card__title">{{ pub.title }}</div>
+        {% if pub.authors %}<div class="pub-card__authors">{{ pub.authors }}</div>{% endif %}
+        {% if pub.year %}<div class="pub-card__year">{{ pub.year }}</div>{% endif %}
+        {% if pub.price %}<div class="pub-card__price">{{ pub.price }}</div>{% endif %}
+      </div>
+    </a>
+    {% empty %}
+    <p style="color:var(--text-dim);padding:3rem 0;">No publications yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

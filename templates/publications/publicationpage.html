@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags wagtaildocs_tags %}
+
+{% block og_tags %}
+{% if page.cover_image %}{% image page.cover_image fill-1200x630 as og_img %}{% endif %}
+<meta property="og:title" content="{{ page.title }}">
+<meta property="og:description" content="{{ page.search_description|default:page.intro }}">
+<meta property="og:type" content="book">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% if og_img %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="pub-detail">
+    <!-- Cover -->
+    <div class="pub-detail__cover">
+      {% if page.cover_image %}
+        {% image page.cover_image width-400 as cover %}
+        <img src="{{ cover.url }}" alt="{{ page.title }}" class="pub-detail__img">
+      {% else %}
+        <div class="pub-detail__no-cover">
+          <span>{{ page.title|truncatechars:60 }}</span>
+        </div>
+      {% endif %}
+
+      <!-- Actions -->
+      <div class="pub-detail__actions">
+        {% if page.buy_url %}
+          <a href="{{ page.buy_url }}" target="_blank" rel="noopener"
+             class="ticket-btn ticket-btn--accent">
+            Buy{% if page.price %} · {{ page.price }}{% endif %} →
+          </a>
+        {% endif %}
+        {% if page.pdf_download %}
+          <a href="{% url 'wagtaildocs_serve' page.pdf_download.id page.pdf_download.filename %}"
+             class="ticket-btn" download>
+            Download PDF ↓
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Info -->
+    <div class="pub-detail__info">
+      <div class="page-header__label">
+        <a href="/publications/" class="text-dim">Publications</a>
+        {% if page.pub_type %}&nbsp;/&nbsp;{{ page.get_pub_type_display }}{% endif %}
+      </div>
+      <h1 class="page-header__title">{{ page.title }}</h1>
+
+      <div class="meta-bar" style="margin:1.5rem 0 2rem;">
+        {% if page.authors %}
+          <span class="meta-bar__item"><strong>Author(s)</strong> {{ page.authors }}</span>
+        {% endif %}
+        {% if page.year %}
+          <span class="meta-bar__item"><strong>Year</strong> {{ page.year }}</span>
+        {% endif %}
+        {% if page.publisher %}
+          <span class="meta-bar__item"><strong>Publisher</strong> {{ page.publisher }}</span>
+        {% endif %}
+        {% if page.isbn %}
+          <span class="meta-bar__item"><strong>ISBN</strong> {{ page.isbn }}</span>
+        {% endif %}
+      </div>
+
+      {% if page.intro %}
+        <p style="font-size:1.05rem;line-height:1.75;color:var(--text-muted);margin-bottom:2rem;">{{ page.intro }}</p>
+      {% endif %}
+
+      <div class="prose">
+        {% for block in page.body %}
+          {% if block.block_type == 'paragraph' %}
+            {{ block.value|richtext }}
+          {% elif block.block_type == 'image' %}
+            {% image block.value width-700 as img %}
+            <figure><img src="{{ img.url }}" alt=""></figure>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="mt-lg">
+        <a href="/publications/" class="text-dim text-upper">← All publications</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
