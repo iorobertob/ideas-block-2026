@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Ideas Block</div>
+    <h1 class="page-header__title">Events</h1>
+    {% if page.intro %}
+      <p class="page-header__subtitle">{{ page.intro }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Search -->
+  <form method="get" class="search-form">
+    <input type="search" name="q" value="{{ query }}" placeholder="Search events…"
+>
+    <button type="submit">Search</button>
+    {% if query %}<a href="?" class="search-clear">✕ Clear</a>{% endif %}
+  </form>
+
+  <div class="filter-bar">
+    <a href="?" class="filter-btn {% if filter_type == 'all' and not request.GET.year %}active{% endif %}">All</a>
+    <a href="?filter=upcoming" class="filter-btn {% if filter_type == 'upcoming' %}active{% endif %}">Upcoming</a>
+    <a href="?filter=past" class="filter-btn {% if filter_type == 'past' %}active{% endif %}">Past</a>
+  </div>
+
+  {% if years %}
+  <div class="filter-bar" style="margin-top:-1rem;">
+    {% for y in years %}
+      <a href="?year={{ y|date:'Y' }}" class="filter-btn {% if request.GET.year == y|date:'Y' %}active{% endif %}">{{ y|date:"Y" }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <ul class="post-list">
+    {% for event in events %}
+    <li class="post-list__item">
+      <a href="{% pageurl event %}" class="post-list__link">
+        <div class="post-list__date">
+          {% if event.start_date %}{{ event.start_date|date:"d M Y" }}{% endif %}
+          {% if event.start_time %}<br>{{ event.start_time|time:"H:i" }}{% endif %}
+        </div>
+        <div>
+          <div class="post-list__title">{{ event.title }}</div>
+          <div class="post-list__excerpt">
+            {% if event.location %}{{ event.location }}{% endif %}
+            {% if not event.is_free and event.price %}&nbsp;· €{{ event.price }}{% endif %}
+            {% if event.is_free %}&nbsp;· Free{% endif %}
+          </div>
+        </div>
+        <div class="post-list__arrow">→</div>
+      </a>
+    </li>
+    {% empty %}
+    <li style="padding: 2rem 0; color: var(--text-dim);">No events found.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

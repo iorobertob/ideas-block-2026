@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>Your ticket — {{ order.product_title }}</title></head>
+<body style="font-family:sans-serif;background:#0a0a0a;color:#f0ede6;padding:2rem;">
+  <div style="max-width:560px;margin:0 auto;">
+    <h1 style="font-family:Georgia,serif;font-size:2rem;margin-bottom:0.5rem;">Ideas Block</h1>
+    <hr style="border:none;border-top:1px solid #222;margin:1.5rem 0;">
+    <h2 style="font-family:Georgia,serif;font-size:1.5rem;font-weight:400;">Your ticket is confirmed.</h2>
+    <p style="color:#888;margin:1rem 0;">{{ order.product_title }}</p>
+    <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;">
+      <tr><td style="color:#555;padding:0.4rem 0;font-size:0.85rem;">Order</td><td style="font-family:monospace;font-size:0.85rem;">{{ order.id }}</td></tr>
+      <tr><td style="color:#555;padding:0.4rem 0;font-size:0.85rem;">Tickets</td><td>{{ order.quantity }}</td></tr>
+      <tr><td style="color:#555;padding:0.4rem 0;font-size:0.85rem;">Total</td><td>€{{ order.total }}</td></tr>
+    </table>
+    <p style="color:#888;font-size:0.85rem;">Your QR code(s) are attached to this email. Show them at the door.</p>
+    <hr style="border:none;border-top:1px solid #222;margin:2rem 0;">
+    <p style="color:#444;font-size:0.75rem;">Ideas Block · Vilnius · ideas-block.com</p>
+  </div>
+</body>
+</html>

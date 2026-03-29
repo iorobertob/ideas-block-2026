@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Ideas Block</div>
+    <h1 class="page-header__title">People</h1>
+    {% if page.intro %}
+      <p class="page-header__subtitle">{{ page.intro }}</p>
+    {% endif %}
+  </div>
+
+  <div class="people-grid">
+    {% for person in people %}
+    <a href="{% pageurl person %}" class="person-card">
+      <div class="person-card__photo">
+        {% if person.photo %}
+          {% image person.photo fill-480x640 as img %}
+          <img src="{{ img.url }}" alt="{{ person.title }}">
+        {% else %}
+          <div class="person-card__placeholder">
+            <span>{{ person.title|slice:":1" }}</span>
+          </div>
+        {% endif %}
+      </div>
+      <div class="person-card__info">
+        <div class="person-card__name">{{ person.title }}</div>
+        {% if person.role %}
+          <div class="person-card__role">{{ person.role }}</div>
+        {% endif %}
+      </div>
+    </a>
+    {% empty %}
+    <p style="color:var(--text-dim);">No people listed yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

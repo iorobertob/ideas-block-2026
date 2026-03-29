@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load wagtailimages_tags %}
+
+{% block title %}Ticket confirmed — Ideas Block{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:700px;padding:6rem 2rem;">
+  <div style="text-align:center;margin-bottom:3rem;">
+    <div style="font-size:3rem;margin-bottom:1rem;">✓</div>
+    <h1 style="font-family:var(--font-display);font-size:clamp(2rem,5vw,3.5rem);margin-bottom:1rem;">You're in.</h1>
+    <p style="color:var(--text-muted);">Your ticket has been confirmed. Check your email for the QR code.</p>
+  </div>
+
+  <div style="border:1px solid var(--border);padding:2rem;margin-bottom:2rem;">
+    <div class="text-upper text-dim" style="margin-bottom:1rem;">Order summary</div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+      <span style="font-family:var(--font-display);font-size:1.2rem;">{{ order.product_title }}</span>
+      <span style="color:var(--accent);">€{{ order.total }}</span>
+    </div>
+    <div style="color:var(--text-dim);font-size:0.85rem;">
+      {{ order.quantity }} ticket{% if order.quantity > 1 %}s{% endif %} · {{ order.buyer_email }}
+    </div>
+  </div>
+
+  {% for ticket in order.tickets.all %}
+  <div style="border:1px solid var(--border);padding:1.5rem;margin-bottom:1rem;display:flex;gap:2rem;align-items:center;">
+    {% if ticket.qr_code %}
+      <img src="{{ ticket.qr_code.url }}" alt="QR Code" style="width:120px;height:120px;background:white;padding:8px;">
+    {% endif %}
+    <div>
+      <div class="text-upper text-dim" style="margin-bottom:0.3rem;">Ticket {{ ticket.seat_number }}</div>
+      <div style="font-family:var(--font-display);font-size:1.1rem;">{{ order.product_title }}</div>
+      <div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.3rem;font-family:monospace;">{{ ticket.id }}</div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="text-align:center;margin-top:3rem;">
+    <a href="/" class="text-upper text-muted">← Back to Ideas Block</a>
+  </div>
+</div>
+{% endblock %}

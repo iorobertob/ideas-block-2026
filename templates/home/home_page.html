@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+  {% if page.hero_image %}
+    {% image page.hero_image fill-1600x900 as hero_img %}
+    <div class="hero__bg" style="background-image: url('{{ hero_img.url }}');"></div>
+  {% elif hero_bg_image %}
+    {% image hero_bg_image fill-1600x900 as hero_img %}
+    <div class="hero__bg" style="background-image: url('{{ hero_img.url }}');"></div>
+  {% else %}
+    <div class="hero__bg" style="background: var(--bg);"></div>
+  {% endif %}
+  <div class="hero__content container">
+    <div class="hero__eyebrow">
+      <span class="hero__eyebrow-line"></span>
+      <span>Vilnius · Since 2014</span>
+    </div>
+    <h1 class="hero__tagline">{{ page.hero_tagline }}</h1>
+    <p class="hero__subtitle">{{ page.hero_subtitle }}</p>
+    {% if page.hero_cta_text %}
+      <a href="{{ page.hero_cta_url }}" class="hero__cta">{{ page.hero_cta_text }}</a>
+    {% endif %}
+  </div>
+</section>
+
+<!-- About snippet -->
+{% if page.about_text %}
+<section class="section container">
+  <div class="about-block">
+    <div>
+      <div class="section-label">About</div>
+    </div>
+    <div class="about-block__text">
+      {{ page.about_text|richtext }}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Latest Posts -->
+{% if latest_posts %}
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <span class="section-label">Latest</span>
+        <h2 class="section-title">From the blog</h2>
+      </div>
+      <a href="/blog/" class="section-link">All posts →</a>
+    </div>
+  </div>
+  <div class="scroll-row">
+    {% for post in latest_posts %}
+    <a href="{% pageurl post %}" class="card">
+      <div class="card__image">
+        {% if post.featured_image %}
+          {% image post.featured_image fill-600x450 as img %}
+          <img src="{{ img.url }}" alt="{{ post.title }}" loading="lazy">
+        {% endif %}
+      </div>
+      <div class="card__body">
+        {% if post.date %}
+          <div class="card__meta">{{ post.date|date:"d M Y" }}</div>
+        {% endif %}
+        <div class="card__title">{{ post.title }}</div>
+        {% if post.intro %}
+          <p class="card__excerpt">{{ post.intro|truncatechars:120 }}</p>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Upcoming Events -->
+{% if upcoming_events %}
+<section class="section container">
+  <div class="section-header">
+    <div>
+      <span class="section-label">Programme</span>
+      <h2 class="section-title">Upcoming events</h2>
+    </div>
+    <a href="/events/?filter=upcoming" class="section-link">All upcoming →</a>
+  </div>
+  <ul class="post-list">
+    {% for event in upcoming_events %}
+    <li class="post-list__item">
+      <a href="{% pageurl event %}" class="post-list__link">
+        <div class="post-list__date">
+          {% if event.start_date %}{{ event.start_date|date:"d M Y" }}{% endif %}
+          {% if event.start_time %}<br>{{ event.start_time|time:"H:i" }}{% endif %}
+        </div>
+        <div>
+          <div class="post-list__title">{{ event.title }}</div>
+          {% if event.location %}
+            <div class="post-list__excerpt">{{ event.location }}</div>
+          {% endif %}
+        </div>
+        <div class="post-list__arrow">→</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<!-- Past Events -->
+{% if past_events %}
+<section class="section container">
+  <div class="section-header">
+    <div>
+      <span class="section-label">Archive</span>
+      <h2 class="section-title">Previous events</h2>
+    </div>
+    <a href="/events/?filter=past" class="section-link">All past events →</a>
+  </div>
+  <ul class="post-list">
+    {% for event in past_events %}
+    <li class="post-list__item">
+      <a href="{% pageurl event %}" class="post-list__link">
+        <div class="post-list__date">
+          {% if event.start_date %}{{ event.start_date|date:"d M Y" }}{% endif %}
+          {% if event.start_time %}<br>{{ event.start_time|time:"H:i" }}{% endif %}
+        </div>
+        <div>
+          <div class="post-list__title">{{ event.title }}</div>
+          {% if event.location %}
+            <div class="post-list__excerpt">{{ event.location }}</div>
+          {% endif %}
+        </div>
+        <div class="post-list__arrow">→</div>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<!-- Support CTA -->
+<section class="support-cta-section">
+  <div class="container">
+    <div class="support-cta-inner">
+      <div class="support-cta-text">
+        <div class="section-label">Support</div>
+        <h2 class="section-title" style="margin-top:0.5rem;">Help us keep going</h2>
+        <p style="color:var(--text-muted);line-height:1.8;margin-top:1rem;">Ideas Block has been producing independent cultural work in Vilnius since 2014. Your support helps us continue — exhibitions, residencies, publications, and more.</p>
+      </div>
+      <div class="support-cta-action">
+        <a href="/tickets/support/" class="ticket-btn ticket-btn--accent">Become a supporter →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

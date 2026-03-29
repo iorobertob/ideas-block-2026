@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block title %}{{ page.title }} — Ideas Block{% endblock %}
+
+{% block content %}
+<article>
+
+  {% if page.hero_image %}
+    <div style="width:100%;height:60vh;overflow:hidden;position:relative;">
+      {% image page.hero_image fill-1600x900 as hero %}
+      <img src="{{ hero.url }}" alt="{{ page.title }}"
+           style="width:100%;height:100%;object-fit:cover;filter:saturate(0.7);">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom, transparent 40%, var(--bg) 100%);"></div>
+    </div>
+  {% endif %}
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header__label">Ideas Block</div>
+      <h1 class="page-header__title">{{ page.title }}</h1>
+      {% if page.intro %}
+        <p class="page-header__subtitle">{{ page.intro }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="container--narrow">
+
+    {% if page.address or page.capacity %}
+    <div class="meta-bar">
+      {% if page.address %}
+        <span class="meta-bar__item"><strong>Address</strong> {{ page.address }}</span>
+      {% endif %}
+      {% if page.capacity %}
+        <span class="meta-bar__item"><strong>Capacity</strong> {{ page.capacity }}</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if page.body %}
+    <div class="prose">
+      {{ page.body|richtext }}
+    </div>
+    {% endif %}
+
+    {% if page.floor_plan_image %}
+    <div style="margin:4rem 0;">
+      <div class="section-label" style="margin-bottom:1.5rem;">Floor plan</div>
+      <div class="floor-plan">
+        {% image page.floor_plan_image width-1200 as fp %}
+        <img src="{{ fp.url }}" alt="Floor plan — {{ page.title }}">
+      </div>
+    </div>
+    {% endif %}
+
+    {% if page.booking_info or page.booking_email %}
+    <div style="margin:4rem 0;padding:2rem;border:1px solid var(--border);background:var(--surface);">
+      <div class="section-label" style="margin-bottom:1rem;">Book the space</div>
+      {% if page.booking_info %}
+        <div class="prose" style="margin-bottom:1.5rem;">{{ page.booking_info|richtext }}</div>
+      {% endif %}
+      {% if page.booking_email %}
+        <a href="mailto:{{ page.booking_email }}"
+           style="display:inline-block;border:1px solid var(--text);color:var(--text);padding:0.75rem 2rem;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;transition:all 0.2s;">
+          Contact us about booking →
+        </a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </div>
+</article>
+{% endblock %}

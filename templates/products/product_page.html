@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<article>
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header__label"><a href="/shop/" class="text-dim">Shop</a></div>
+      <h1 class="page-header__title">{{ page.title }}</h1>
+      {% if page.intro %}
+        <p class="page-header__subtitle">{{ page.intro }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if page.featured_image %}
+    <div class="container">
+      {% image page.featured_image width-1200 as img %}
+      <img src="{{ img.url }}" alt="{{ page.title }}" class="featured-image">
+    </div>
+  {% endif %}
+
+  <div class="container--narrow">
+    {% if page.price_display or page.price %}
+      <div class="meta-bar">
+        <span class="meta-bar__item">
+          <strong>Price</strong>
+          {% if page.price_display %}{{ page.price_display }}{% elif page.price %}€{{ page.price }}{% endif %}
+        </span>
+      </div>
+    {% endif %}
+
+    <div class="prose">
+      {% for block in page.body %}
+        {% if block.block_type == 'paragraph' %}
+          {{ block.value|richtext }}
+        {% elif block.block_type == 'heading' %}
+          <h2>{{ block.value }}</h2>
+        {% elif block.block_type == 'image' %}
+          {% image block.value width-900 as img %}
+          <figure><img src="{{ img.url }}" alt=""></figure>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if page.is_available %}
+      <div class="mt-lg">
+        {% if page.use_stripe %}
+          <a href="{% url 'ticket_checkout' page.pk %}" class="ticket-btn">
+            Purchase {% if page.price %}· €{{ page.price }}{% endif %} →
+          </a>
+        {% elif page.external_purchase_url %}
+          <a href="{{ page.external_purchase_url }}" target="_blank" rel="noopener"
+             style="display:inline-block;border:1px solid var(--text);color:var(--text);padding:0.75rem 2rem;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;">
+            Register / Purchase →
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    <div class="mt-lg">
+      <a href="/shop/" class="text-dim text-upper">← Back to shop</a>
+    </div>
+  </div>
+</article>
+{% endblock %}

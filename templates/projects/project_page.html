@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<article>
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header__label"><a href="/projects/" class="text-dim">Projects</a></div>
+      <h1 class="page-header__title">{{ page.title }}</h1>
+      {% if page.subtitle %}
+        <p class="page-header__subtitle">{{ page.subtitle }}</p>
+      {% elif page.intro %}
+        <p class="page-header__subtitle">{{ page.intro }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if page.featured_image %}
+    <div class="container">
+      {% image page.featured_image width-1200 as img %}
+      <img src="{{ img.url }}" alt="{{ page.title }}" class="featured-image">
+    </div>
+  {% endif %}
+
+  <div class="container--narrow">
+    <div class="meta-bar">
+      {% if page.year %}
+        <span class="meta-bar__item"><strong>Year</strong> {{ page.year }}</span>
+      {% endif %}
+      {% if page.collaborators %}
+        <span class="meta-bar__item"><strong>With</strong> {{ page.collaborators }}</span>
+      {% endif %}
+    </div>
+
+    <div class="prose">
+      {% for block in page.body %}
+        {% if block.block_type == 'paragraph' %}
+          {{ block.value|richtext }}
+        {% elif block.block_type == 'heading' %}
+          <h2>{{ block.value }}</h2>
+        {% elif block.block_type == 'image' %}
+          {% image block.value width-900 as img %}
+          <figure><img src="{{ img.url }}" alt=""></figure>
+        {% elif block.block_type == 'image_caption' %}
+          {% image block.value.image width-900 as img %}
+          <figure>
+            <img src="{{ img.url }}" alt="">
+            {% if block.value.caption %}
+              <figcaption>{{ block.value.caption }}</figcaption>
+            {% endif %}
+          </figure>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <div class="mt-lg">
+      <a href="/projects/" class="text-dim text-upper">← Back to projects</a>
+    </div>
+  </div>
+</article>
+{% endblock %}

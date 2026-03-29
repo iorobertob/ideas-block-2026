@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Support Ideas Block{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Ideas Block</div>
+    <h1 class="page-header__title">Support us</h1>
+    <p class="page-header__subtitle">Help Ideas Block continue producing independent cultural work.</p>
+  </div>
+
+  {% if error %}
+    <div style="border:1px solid var(--red);color:var(--red);padding:1rem;margin-bottom:2rem;">{{ error }}</div>
+  {% endif %}
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;padding-bottom:6rem;">
+    <div>
+      <p style="color:var(--text-muted);line-height:1.8;font-size:1rem;">
+        Ideas Block has been running since 2014, organising exhibitions, workshops, residencies, and events in Vilnius. Your support helps us keep this work going — independently and without compromise.
+      </p>
+      <p style="color:var(--text-muted);line-height:1.8;font-size:1rem;margin-top:1rem;">
+        As a supporter you will receive updates about our upcoming projects and priority access to events.
+      </p>
+    </div>
+
+    <div>
+      <form method="post" action="{% url 'create_subscription' %}" style="display:flex;flex-direction:column;gap:1.5rem;">
+        {% csrf_token %}
+
+        <div>
+          <label class="form-label">Your email</label>
+          <input type="email" name="email" required class="form-input" placeholder="your@email.com">
+        </div>
+
+        <div>
+          <label class="form-label">Choose a plan</label>
+          <div style="display:flex;flex-direction:column;gap:0.75rem;">
+            {% for value, label in plans %}
+            <label style="display:flex;align-items:center;gap:1rem;border:1px solid var(--border);padding:1rem;cursor:pointer;transition:border-color 0.2s;">
+              <input type="radio" name="plan" value="{{ value }}" {% if forloop.first %}checked{% endif %}
+                     style="accent-color:var(--accent);">
+              <div>
+                <div style="font-size:0.9rem;color:var(--text);">{{ label }}</div>
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary"
+          {% if not stripe_publishable_key %}disabled title="Payment not configured"{% endif %}>
+          Continue to payment →
+        </button>
+        {% if not stripe_publishable_key %}
+          <p style="font-size:0.75rem;color:var(--text-dim);">Subscription payments not yet configured. Contact <a href="mailto:contact@ideas-block.com">contact@ideas-block.com</a> to support us directly.</p>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.form-label { display:block;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);margin-bottom:0.5rem; }
+.form-input { width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.75rem;font-family:var(--font-body);font-size:0.9rem;outline:none; }
+.form-input:focus { border-color:var(--accent); }
+.btn-primary { background:var(--text);color:var(--bg);border:none;padding:0.9rem 2rem;font-family:var(--font-body);font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:opacity 0.2s; }
+.btn-primary:disabled { opacity:0.4;cursor:not-allowed; }
+</style>
+{% endblock %}

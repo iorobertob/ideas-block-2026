@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Ticket Scanner — Ideas Block{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:640px;padding:4rem 2rem;">
+  <div class="page-header">
+    <div class="page-header__label">Staff only</div>
+    <h1 class="page-header__title">Ticket Scanner</h1>
+  </div>
+
+  <div style="margin-bottom:2rem;">
+    <label class="text-upper text-dim" style="display:block;margin-bottom:0.5rem;">Filter by event SKU (optional)</label>
+    <select id="sku-filter" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.75rem;font-family:var(--font-body);font-size:0.9rem;outline:none;">
+      <option value="">All events</option>
+      {% for product in products %}
+        {% if product.sku %}
+          <option value="{{ product.sku }}">{{ product.title }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+  </div>
+
+  <div id="reader" style="border:1px solid var(--border);"></div>
+
+  <div id="result" style="display:none;padding:1.5rem;margin-top:1.5rem;border:1px solid;text-align:center;">
+    <div id="result-icon" style="font-size:2rem;margin-bottom:0.5rem;"></div>
+    <div id="result-msg" style="font-family:var(--font-display);font-size:1.4rem;"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<script>
+const resultBox = document.getElementById('result');
+const resultIcon = document.getElementById('result-icon');
+const resultMsg = document.getElementById('result-msg');
+const skuFilter = document.getElementById('sku-filter');
+
+let lastScan = '';
+let cooldown = false;
+
+function showResult(ok, message) {
+  resultBox.style.display = 'block';
+  resultBox.style.borderColor = ok ? '#4caf50' : 'var(--red)';
+  resultBox.style.color = ok ? '#4caf50' : 'var(--red)';
+  resultIcon.textContent = ok ? '✓' : '✗';
+  resultMsg.textContent = message;
+  // Auto-hide after 4s
+  setTimeout(() => { resultBox.style.display = 'none'; }, 4000);
+}
+
+function onScanSuccess(decodedText) {
+  if (cooldown || decodedText === lastScan) return;
+  cooldown = true;
+  lastScan = decodedText;
+
+  fetch('/tickets/verify/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': '{{ csrf_token }}',
+    },
+    body: JSON.stringify({ qr_data: decodedText, sku: skuFilter.value }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    showResult(data.ok, data.message);
+    setTimeout(() => { cooldown = false; lastScan = ''; }, 3000);
+  })
+  .catch(() => {
+    showResult(false, 'Network error');
+    setTimeout(() => { cooldown = false; }, 3000);
+  });
+}
+
+const html5QrcodeScanner = new Html5QrcodeScanner(
+  "reader",
+  { fps: 10, qrbox: { width: 300, height: 300 } },
+  false
+);
+html5QrcodeScanner.render(onScanSuccess, () => {});
+</script>
+{% endblock %}

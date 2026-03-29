@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Ideas Block</div>
+    <h1 class="page-header__title">Workshops &amp; Products</h1>
+    {% if page.intro %}
+      <p class="page-header__subtitle">{{ page.intro }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Search -->
+  <form method="get" class="search-form">
+    <input type="search" name="q" value="{{ query }}" placeholder="Search workshops &amp; products…"
+>
+    <button type="submit">Search</button>
+    {% if query %}<a href="?" class="search-clear">✕ Clear</a>{% endif %}
+  </form>
+
+  <div class="filter-bar">
+    <a href="?" class="filter-btn {% if active_filter == 'all' %}active{% endif %}">All</a>
+    <a href="?available=1" class="filter-btn {% if active_filter == '1' %}active{% endif %}">Available now</a>
+    <a href="?price=paid" class="filter-btn {% if active_filter == 'paid' %}active{% endif %}">Paid</a>
+    <a href="?price=free" class="filter-btn {% if active_filter == 'free' %}active{% endif %}">Free</a>
+  </div>
+
+  <div class="grid-3">
+    {% for product in products %}
+    <a href="{% pageurl product %}" class="card">
+      <div class="card__image">
+        {% if product.featured_image %}
+          {% image product.featured_image fill-600x450 as img %}
+          <img src="{{ img.url }}" alt="{{ product.title }}" loading="lazy">
+        {% endif %}
+      </div>
+      <div class="card__body">
+        <div class="card__title">{{ product.title }}</div>
+        {% if product.intro %}
+          <p class="card__excerpt">{{ product.intro|truncatechars:120 }}</p>
+        {% endif %}
+        <div style="margin-top:auto;padding-top:0.75rem;display:flex;align-items:center;justify-content:space-between;">
+          {% if product.price_display %}
+            <div class="card__meta">{{ product.price_display }}</div>
+          {% elif product.price %}
+            <div class="card__meta">€{{ product.price }}</div>
+          {% else %}
+            <div class="card__meta">Free</div>
+          {% endif %}
+          {% if product.is_available %}
+            <span style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);padding:0.2rem 0.5rem;">Available</span>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+    {% empty %}
+    <div style="padding:2rem;color:var(--text-dim);">No products listed.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Ideas Block</div>
+    <h1 class="page-header__title">Projects</h1>
+    {% if page.intro %}
+      <p class="page-header__subtitle">{{ page.intro }}</p>
+    {% endif %}
+  </div>
+
+  <!-- Search -->
+  <form method="get" class="search-form">
+    <input type="search" name="q" value="{{ query }}" placeholder="Search projects…"
+>
+    <button type="submit">Search</button>
+    {% if query %}<a href="?" class="search-clear">✕ Clear</a>{% endif %}
+  </form>
+
+  {% if years %}
+  <div class="filter-bar">
+    <a href="?" class="filter-btn {% if not request.GET.year %}active{% endif %}">All</a>
+    {% for y in years %}
+      <a href="?year={{ y }}" class="filter-btn {% if request.GET.year == y|stringformat:'s' %}active{% endif %}">{{ y }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="grid-3">
+    {% for project in projects %}
+    <a href="{% pageurl project %}" class="card">
+      <div class="card__image">
+        {% if project.featured_image %}
+          {% image project.featured_image fill-600x450 as img %}
+          <img src="{{ img.url }}" alt="{{ project.title }}" loading="lazy">
+        {% endif %}
+      </div>
+      <div class="card__body">
+        {% if project.year %}
+          <div class="card__meta">{{ project.year }}</div>
+        {% endif %}
+        <div class="card__title">{{ project.title }}</div>
+        {% if project.intro %}
+          <p class="card__excerpt">{{ project.intro|truncatechars:100 }}</p>
+        {% endif %}
+      </div>
+    </a>
+    {% empty %}
+    <div style="padding:2rem;color:var(--text-dim);">No projects yet.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
