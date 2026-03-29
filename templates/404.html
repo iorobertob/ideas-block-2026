@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found — Ideas Block</title>
+  <link rel="stylesheet" href="{% static 'css/main.css' %}">
+</head>
+<body>
+<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:4rem 2rem;text-align:center;">
+  <a href="/" style="font-family:var(--font-display);font-size:1.1rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4rem;display:block;">Ideas Block</a>
+  <div style="font-family:var(--font-display);font-size:clamp(4rem,15vw,10rem);font-weight:300;line-height:1;color:var(--surface-3);user-select:none;">404</div>
+  <h1 style="font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2.5rem);font-weight:400;margin:1.5rem 0 1rem;">Page not found</h1>
+  <p style="color:var(--text-muted);max-width:400px;line-height:1.7;margin-bottom:3rem;">
+    The page you're looking for may have moved or been removed.
+  </p>
+  <div style="display:flex;gap:1.5rem;flex-wrap:wrap;justify-content:center;">
+    <a href="/" style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--accent-dim);padding-bottom:2px;">← Home</a>
+    <a href="/blog/" style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);">Blog</a>
+    <a href="/events/" style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);">Events</a>
+    <a href="/projects/" style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);">Projects</a>
+    <a href="/search/" style="font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);">Search</a>
+  </div>
+</div>
+</body>
+</html>
