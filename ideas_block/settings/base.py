@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     # Wagtail
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
+    "wagtail.contrib.sitemaps",
     "wagtail.contrib.table_block",
     "wagtail.embeds",
     "wagtail.sites",
@@ -36,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sitemaps",
 ]
 
 MIDDLEWARE = [
