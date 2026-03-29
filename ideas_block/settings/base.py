@@ -14,6 +14,9 @@ INSTALLED_APPS = [
     "core",
     "tickets",
     "search",
+    "opencalls",
+    "press",
+    "publications",
     # Wagtail
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",

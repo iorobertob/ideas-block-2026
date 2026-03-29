@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block og_tags %}
+{% if page.featured_image %}{% image page.featured_image fill-1200x630 as og_img %}{% endif %}
+<meta property="og:title" content="{{ page.title }}">
+<meta property="og:description" content="{{ page.search_description|default:page.intro }}">
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+{% if og_img %}<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ og_img.url }}">{% endif %}
+<meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
+{% block content %}
+<article>
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header__label">
+        <a href="/open-calls/" class="text-dim">Open Calls</a>
+        {% if page.call_type %}&nbsp;/&nbsp;{{ page.get_call_type_display }}{% endif %}
+      </div>
+      <h1 class="page-header__title">{{ page.title }}</h1>
+      {% if page.subtitle %}
+        <p class="page-header__subtitle">{{ page.subtitle }}</p>
+      {% elif page.intro %}
+        <p class="page-header__subtitle">{{ page.intro }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if page.featured_image %}
+    <div class="container">
+      {% image page.featured_image width-1200 as img %}
+      <img src="{{ img.url }}" alt="{{ page.title }}" class="featured-image">
+    </div>
+  {% endif %}
+
+  <div class="container--narrow">
+    <!-- Call metadata -->
+    <div class="meta-bar">
+      {% if page.deadline %}
+        <span class="meta-bar__item">
+          <strong>Deadline</strong>
+          {{ page.deadline|date:"l, d F Y" }}
+          {% if not page.is_open %}<span class="tag-pill" style="color:var(--red);border-color:var(--red);">Closed</span>{% endif %}
+        </span>
+      {% else %}
+        <span class="meta-bar__item"><strong>Deadline</strong> Rolling / ongoing</span>
+      {% endif %}
+      {% if page.fee %}
+        <span class="meta-bar__item"><strong>Fee</strong> {{ page.fee }}</span>
+      {% endif %}
+      {% if page.call_type %}
+        <span class="meta-bar__item"><strong>Type</strong> {{ page.get_call_type_display }}</span>
+      {% endif %}
+    </div>
+
+    <!-- Body -->
+    <div class="prose">
+      {% for block in page.body %}
+        {% if block.block_type == 'paragraph' %}
+          {{ block.value|richtext }}
+        {% elif block.block_type == 'heading' %}
+          <h2>{{ block.value }}</h2>
+        {% elif block.block_type == 'image' %}
+          {% image block.value width-900 as img %}
+          <figure><img src="{{ img.url }}" alt=""></figure>
+        {% elif block.block_type == 'eligibility' %}
+          <div class="eligibility-block">
+            <h3>{{ block.value.title }}</h3>
+            {{ block.value.text|richtext }}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- Apply CTA -->
+    {% if page.is_open %}
+    <div class="apply-cta">
+      {% if page.application_url %}
+        <a href="{{ page.application_url }}" target="_blank" rel="noopener"
+           class="ticket-btn ticket-btn--accent">Apply now →</a>
+      {% elif page.application_email %}
+        <a href="mailto:{{ page.application_email }}?subject=Application: {{ page.title }}"
+           class="ticket-btn ticket-btn--accent">Apply by email →</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="mt-lg">
+      <a href="/open-calls/" class="text-dim text-upper">← All open calls</a>
+    </div>
+  </div>
+</article>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Ideas Block</div>
+    <h1 class="page-header__title">Open Calls</h1>
+    {% if page.intro %}
+      <p class="page-header__subtitle">{{ page.intro }}</p>
+    {% endif %}
+  </div>
+
+  {% if open_calls %}
+  <section class="section">
+    <div class="section-header" style="margin-bottom:2rem;">
+      <div>
+        <span class="section-label">Now open</span>
+        <h2 class="section-title">Current calls</h2>
+      </div>
+    </div>
+    <div class="open-calls-grid">
+      {% for call in open_calls %}
+      <a href="{% pageurl call %}" class="open-call-card">
+        {% if call.featured_image %}
+          {% image call.featured_image fill-600x400 as img %}
+          <div class="open-call-card__img">
+            <img src="{{ img.url }}" alt="{{ call.title }}" loading="lazy">
+          </div>
+        {% endif %}
+        <div class="open-call-card__body">
+          {% if call.call_type %}
+            <div class="open-call-card__type">{{ call.get_call_type_display }}</div>
+          {% endif %}
+          <div class="open-call-card__title">{{ call.title }}</div>
+          {% if call.subtitle %}
+            <div class="open-call-card__subtitle">{{ call.subtitle }}</div>
+          {% endif %}
+          {% if call.intro %}
+            <p class="open-call-card__excerpt">{{ call.intro|truncatechars:140 }}</p>
+          {% endif %}
+          <div class="open-call-card__meta">
+            {% if call.deadline %}
+              <span>Deadline: {{ call.deadline|date:"d F Y" }}</span>
+            {% else %}
+              <span>Rolling deadline</span>
+            {% endif %}
+            {% if call.fee %}
+              <span>· {{ call.fee }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% else %}
+  <p style="color:var(--text-dim);padding:3rem 0;">No open calls at the moment. Check back soon.</p>
+  {% endif %}
+
+  {% if closed_calls %}
+  <section class="section" style="margin-top:var(--space-xl);">
+    <div class="section-header" style="margin-bottom:2rem;">
+      <div>
+        <span class="section-label">Archive</span>
+        <h2 class="section-title">Past calls</h2>
+      </div>
+    </div>
+    <ul class="post-list">
+      {% for call in closed_calls %}
+      <li class="post-list__item">
+        <a href="{% pageurl call %}" class="post-list__link">
+          <div class="post-list__date">
+            {% if call.deadline %}{{ call.deadline|date:"d M Y" }}{% endif %}
+          </div>
+          <div>
+            <div class="post-list__title">{{ call.title }}</div>
+            {% if call.call_type %}
+              <p class="post-list__excerpt">{{ call.get_call_type_display }}</p>
+            {% endif %}
+          </div>
+          <div class="post-list__arrow">→</div>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

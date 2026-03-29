@@ -1443,6 +1443,92 @@ p:last-child { margin-bottom: 0; }
 .sr-only     { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0; }
 
 /* ── Support CTA section ───────────────────────────────────────── */
+/* ── Open Calls ────────────────────────────────────────────────── */
+.open-calls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-md);
+}
+
+.open-call-card {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+.open-call-card:hover { border-color: var(--accent-dim); }
+
+.open-call-card__img img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.7);
+  transition: filter 0.3s;
+}
+.open-call-card:hover .open-call-card__img img { filter: saturate(1); }
+
+.open-call-card__body { padding: 1.5rem; }
+
+.open-call-card__type {
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+
+.open-call-card__title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 400;
+  line-height: 1.25;
+  margin-bottom: 0.4rem;
+}
+
+.open-call-card__subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.open-call-card__excerpt {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 1rem;
+}
+
+.open-call-card__meta {
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+
+.eligibility-block {
+  background: var(--surface);
+  border-left: 3px solid var(--accent-dim);
+  padding: 1.5rem 1.75rem;
+  margin: 2rem 0;
+}
+.eligibility-block h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  color: var(--accent);
+}
+
+.apply-cta {
+  margin: 3rem 0 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .support-cta-section {
   background: var(--surface);
   border-top: 1px solid var(--border);
