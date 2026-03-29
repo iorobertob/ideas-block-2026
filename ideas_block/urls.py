@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.urls import include, path
+from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 
 from wagtail.admin import urls as wagtailadmin_urls
@@ -40,12 +41,7 @@ if settings.DEBUG:
     urlpatterns += staticfiles_urlpatterns()
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-urlpatterns = urlpatterns + [
-    # For anything not caught by a more specific rule above, hand over to
-    # Wagtail's page serving mechanism. This should be the last pattern in
-    # the list:
+urlpatterns = urlpatterns + i18n_patterns(
+    # Wagtail page serving with optional locale prefix (/lt/..., /en/..., or /)
     path("", include(wagtail_urls)),
-    # Alternatively, if you want Wagtail pages to be served from a subpath
-    # of your site, rather than the site root:
-    #    path("pages/", include(wagtail_urls)),
-]
+)

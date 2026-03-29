@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "wagtail.contrib.table_block",
     "wagtail.embeds",
     "wagtail.sites",
+    "wagtail.locales",
     "wagtail.users",
     "wagtail.snippets",
     "wagtail.documents",
@@ -171,6 +172,13 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10_000
 # Wagtail settings
 
 WAGTAIL_SITE_NAME = "Ideas Block"
+
+# ── Internationalisation ─────────────────────────────────────────────────────
+WAGTAIL_I18N_ENABLED = True
+WAGTAIL_CONTENT_LANGUAGES = [
+    ("en", "English"),
+    ("lt", "Lietuvių"),
+]
 
 # Rich text editor — full toolbar for all rich text fields
 WAGTAILADMIN_RICH_TEXT_EDITORS = {
