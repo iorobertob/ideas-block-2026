@@ -257,20 +257,13 @@ pip install -r requirements.txt
 
 ### 2. Environment variables
 
-Create `ideas_block/settings/local.py` (git-ignored):
-
-```python
-# ideas_block/settings/local.py
-STRIPE_PUBLISHABLE_KEY = "pk_test_..."
-STRIPE_SECRET_KEY = "sk_test_..."
-STRIPE_WEBHOOK_SECRET = "whsec_..."
-STRIPE_PRICE_SUPPORTER = "price_..."
-STRIPE_PRICE_PATRON = "price_..."
-MAILERLITE_API_KEY = ""          # leave blank in dev
-PLAUSIBLE_DOMAIN = ""            # leave blank in dev
+```bash
+cp .env.example .env
+# Open .env and fill in your Stripe test keys at minimum.
+# Everything else has safe defaults for local development.
 ```
 
-Or use a `.env` file with `python-dotenv` (already installed).
+The `.env` file is loaded automatically via `python-dotenv` (already in `requirements.txt`). For local dev, `DJANGO_SETTINGS_MODULE` defaults to `ideas_block.settings.dev` which uses SQLite and the console email backend — no database or SMTP setup needed.
 
 ### 3. Database and initial pages
 
@@ -330,11 +323,11 @@ sudo apt update && sudo apt install -y python3.12 python3.12-venv python3-pip ng
 ### 2. PostgreSQL
 
 ```bash
-sudo -u postgres psql
-CREATE DATABASE ideas_block;
-CREATE USER ideas_block_user WITH PASSWORD 'strong_password_here';
-GRANT ALL PRIVILEGES ON DATABASE ideas_block TO ideas_block_user;
-\q
+source .env  # load DB_* variables
+sudo -u postgres psql \
+  -c "CREATE DATABASE $DB_NAME;" \
+  -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';" \
+  -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
 ```
 
 ### 3. Deploy code
@@ -351,22 +344,27 @@ pip install gunicorn psycopg2-binary
 
 ### 4. Production environment
 
-Create `/srv/ideas_block/new_website/.env`:
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and set at minimum:
 
 ```env
 DJANGO_SETTINGS_MODULE=ideas_block.settings.production
-SECRET_KEY=<generate with: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())">
-DATABASE_URL=postgres://ideas_block_user:password@localhost/ideas_block
-ALLOWED_HOSTS=ideas-block.com,www.ideas-block.com
+DJANGO_SECRET_KEY=<generate a fresh one>
+DB_PASSWORD=<your postgres password>
+EMAIL_HOST_USER=<your smtp login>
+EMAIL_HOST_PASSWORD=<your smtp password>
 STRIPE_PUBLISHABLE_KEY=pk_live_...
 STRIPE_SECRET_KEY=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PRICE_SUPPORTER=price_...
 STRIPE_PRICE_PATRON=price_...
-MAILERLITE_API_KEY=...
-PLAUSIBLE_DOMAIN=ideas-block.com
-WAGTAILADMIN_BASE_URL=https://ideas-block.com
+MAILERLITE_API_KEY=<your mailerlite token>
 ```
+
+See the **Environment Variables Reference** section for all available options.
 
 ### 5. Initialise
 
@@ -471,6 +469,228 @@ rsync -avz --update \
 ```
 
 For high-traffic production: migrate media to object storage (Cloudflare R2, Hetzner Storage Box, AWS S3) using `django-storages`.
+
+---
+
+## Deployment — Namecheap Shared Hosting (cPanel)
+
+This is the simplest deployment path — no server administration required. Namecheap's shared hosting runs Apache + Phusion Passenger, which serves Django via WSGI.
+
+**Files already in the repo for this:**
+- `passenger_wsgi.py` — Passenger entry point (place manually in app root, outside the repo)
+- `ideas_block/settings/cpanel.py` — cPanel-specific settings (SQLite, Apache-served static)
+
+### Directory layout on the server
+
+```
+~/ideas_block/                  ← cPanel application root (set in Step 2)
+    passenger_wsgi.py           ← copied manually from the repo (Step 3)
+    .env                        ← created manually (Step 4) — never in git
+    db.sqlite3                  ← transferred from local (Step 6) — never in git
+    git/                        ← the cloned repository (Step 3)
+        manage.py
+        requirements.txt
+        passenger_wsgi.py       ← source copy lives here in git
+        static/                 ← populated by collectstatic (Step 7)
+        media/                  ← populated by rsync (Step 8)
+        ideas_block/
+        templates/
+        ...
+```
+
+`.env` and `db.sqlite3` live in the application root, **outside** the git repo — they are never committed. `static/` and `media/` live inside `git/` and are served by WhiteNoise through Passenger — no `public_html` involvement.
+
+### Constraints vs. VPS
+
+| | VPS / Docker | cPanel shared |
+|---|---|---|
+| Database | PostgreSQL | SQLite (stored outside `public_html`) |
+| Static files | WhiteNoise / Nginx | WhiteNoise via Passenger (`git/static/`) |
+| Process manager | systemd / Docker | Passenger (managed by cPanel) |
+| SSL | Certbot | AutoSSL (one click in cPanel) |
+| SSH access | Full root | Yes, but no sudo |
+
+---
+
+### Step 1 — Enable SSH on Namecheap
+
+cPanel → **SSH Access** → enable SSH and add your public key. All subsequent steps use SSH.
+
+---
+
+### Step 2 — Create the Python app in cPanel
+
+1. cPanel → **Software** → **Setup Python App**
+2. Click **Create Application** and fill in:
+
+| Field | Value |
+|---|---|
+| Python version | `3.12` (or highest available) |
+| Application root | `ideas_block` *(folder in your home dir — cPanel creates it)* |
+| Application URL | `ideas-block.com` |
+| Application startup file | `passenger_wsgi.py` |
+| Application entry point | `application` |
+
+3. Click **Create** — cPanel creates the virtualenv and shows you the activation command. Note it down.
+
+---
+
+### Step 3 — Upload the code and place passenger_wsgi.py
+
+```bash
+# Clone the repo into ~/ideas_block/git/
+cd ~/ideas_block
+git clone <repo-url> git
+
+# Copy passenger_wsgi.py from the repo up to the app root
+cp ~/ideas_block/git/passenger_wsgi.py ~/ideas_block/passenger_wsgi.py
+```
+
+`passenger_wsgi.py` must sit directly in `~/ideas_block/` (the app root), not inside the `git/` subfolder. The copy in `git/` is just the source that lives in version control.
+
+---
+
+### Step 4 — Configure .env
+
+```bash
+# Create .env in the app root (outside the git repo)
+cp ~/ideas_block/git/.env.example ~/ideas_block/.env
+nano ~/ideas_block/.env
+```
+
+Set at minimum:
+
+```env
+DJANGO_SETTINGS_MODULE=ideas_block.settings.cpanel
+DJANGO_SECRET_KEY=<generate one — see .env.example>
+SITE_URL=https://ideas-block.com
+ALLOWED_HOSTS=ideas-block.com,www.ideas-block.com
+EMAIL_HOST_USER=<your smtp login>
+EMAIL_HOST_PASSWORD=<your smtp password>
+STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_SUPPORTER=price_...
+STRIPE_PRICE_PATRON=price_...
+MAILERLITE_API_KEY=<your token>
+PLAUSIBLE_DOMAIN=ideas-block.com
+```
+
+> Find your cPanel username in cPanel → General Information, or run `whoami` via SSH.
+
+---
+
+### Step 5 — Install Python dependencies
+
+```bash
+# Activate the virtualenv cPanel created (command shown in Setup Python App)
+source /home/<username>/virtualenv/ideas_block/3.12/bin/activate
+
+pip install -r ~/ideas_block/git/requirements.txt
+```
+
+---
+
+### Step 6 — Transfer the database
+
+```bash
+# From your local machine — copy the SQLite database to the app root (not inside git/)
+scp /Users/selves/Documents/ROBERTO/WORKS/DEVELOPMENT/IDEAS-BLOCK/new_website/db.sqlite3 \
+  <username>@<server>:~/ideas_block/db.sqlite3
+```
+
+Then apply any pending migrations:
+
+```bash
+# On the server (virtualenv activated)
+cd ~/ideas_block/git
+python manage.py migrate --settings=ideas_block.settings.cpanel
+```
+
+---
+
+### Step 7 — Collect static files
+
+```bash
+# On the server (virtualenv activated)
+cd ~/ideas_block/git
+python manage.py collectstatic --noinput --settings=ideas_block.settings.cpanel
+```
+
+This writes all static files to `~/ideas_block/git/static/`. WhiteNoise serves them via Passenger — no `public_html` step needed.
+
+---
+
+### Step 8 — Upload media files
+
+```bash
+# From your local machine — initial upload (~6.5 GB, run once)
+rsync -avz --progress \
+  /Users/selves/Documents/ROBERTO/WORKS/DEVELOPMENT/IDEAS-BLOCK/new_website/media/ \
+  <username>@<server>:~/ideas_block/git/media/
+
+# Subsequent syncs — only new/changed files
+rsync -avz --update --checksum \
+  /Users/selves/Documents/ROBERTO/WORKS/DEVELOPMENT/IDEAS-BLOCK/new_website/media/ \
+  <username>@<server>:~/ideas_block/git/media/
+```
+
+> **Bandwidth tip:** Skip the `images/` renditions folder (3.3 GB) — Wagtail regenerates them on demand:
+> ```bash
+> rsync -avz media/original_images/ <username>@<server>:~/ideas_block/git/media/original_images/
+> rsync -avz media/documents/       <username>@<server>:~/ideas_block/git/media/documents/
+> ```
+
+---
+
+### Step 9 — Restart the app
+
+cPanel → **Setup Python App** → click **Restart**. Or via SSH:
+
+```bash
+touch ~/ideas_block/tmp/restart.txt   # Passenger watches this file
+```
+
+The site should now be live at `https://ideas-block.com`.
+
+---
+
+### Step 10 — Enable SSL
+
+cPanel → **Security** → **SSL/TLS** → **AutoSSL** → run for your domain. Free, automatic, renews itself.
+
+---
+
+### Updating after code changes
+
+```bash
+# On the server (via SSH)
+cd ~/ideas_block/git
+git pull
+
+source /home/<username>/virtualenv/ideas_block/3.12/bin/activate
+pip install -r requirements.txt                                          # if dependencies changed
+python manage.py migrate --settings=ideas_block.settings.cpanel          # if models changed
+python manage.py collectstatic --noinput --settings=ideas_block.settings.cpanel
+
+# If passenger_wsgi.py changed in the repo, copy it to the app root again
+cp ~/ideas_block/git/passenger_wsgi.py ~/ideas_block/passenger_wsgi.py
+
+touch ~/ideas_block/tmp/restart.txt                                      # reload Passenger
+```
+
+---
+
+### Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| 500 error on all pages | Check `~/logs/` or cPanel → **Errors** for the Passenger traceback |
+| `SECRET_KEY` not found | Confirm `.env` is at `~/ideas_block/.env` (not inside `git/`) |
+| Static files 404 | Confirm `collectstatic` ran and `~/ideas_block/git/static/` exists |
+| Media files 404 | Confirm rsync completed and `~/ideas_block/git/media/` exists |
+| `ModuleNotFoundError` | Confirm virtualenv is activated and `pip install -r requirements.txt` ran |
+| App won't restart | Passenger can take 30–60 s; hard-restart via cPanel Setup Python App |
 
 ---
 
@@ -779,19 +999,39 @@ python manage.py loaddata backup.json
 
 ## Environment Variables Reference
 
-| Variable | Required in prod | Description |
-|---|---|---|
-| `SECRET_KEY` | ✓ | Django secret key — generate a fresh one |
-| `ALLOWED_HOSTS` | ✓ | Comma-separated domains |
-| `DATABASE_URL` | ✓ | PostgreSQL connection string |
-| `STRIPE_PUBLISHABLE_KEY` | For tickets | Stripe publishable key |
-| `STRIPE_SECRET_KEY` | For tickets | Stripe secret key |
-| `STRIPE_WEBHOOK_SECRET` | For tickets | Stripe webhook signing secret |
-| `STRIPE_PRICE_SUPPORTER` | For subscriptions | Stripe Price ID for €5/mo plan |
-| `STRIPE_PRICE_PATRON` | For subscriptions | Stripe Price ID for €15/mo plan |
-| `MAILERLITE_API_KEY` | For newsletter | MailerLite API v2 token |
-| `PLAUSIBLE_DOMAIN` | For analytics | e.g. `ideas-block.com` |
-| `WAGTAILADMIN_BASE_URL` | For emails | e.g. `https://ideas-block.com` |
+All configuration is driven by a `.env` file in the project root. Copy `.env.example` to `.env` and fill in the blanks.
+
+```bash
+cp .env.example .env
+```
+
+`.env` is git-ignored and must never be committed. `.env.example` is committed and kept up to date.
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `DJANGO_SETTINGS_MODULE` | ✓ | — | `ideas_block.settings.dev` locally, `ideas_block.settings.production` on server |
+| `DJANGO_SECRET_KEY` | ✓ prod | — | Random string — generate with `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"` |
+| `ALLOWED_HOSTS` | ✓ prod | `ideas-block.com,...` | Comma-separated domain list |
+| `SITE_URL` | ✓ prod | `https://ideas-block.com` | Full URL used in Wagtail admin notification emails |
+| `DB_NAME` | prod | `ideas_block` | PostgreSQL database name |
+| `DB_USER` | prod | `ideas_block_user` | PostgreSQL user |
+| `DB_PASSWORD` | prod | — | PostgreSQL password |
+| `DB_HOST` | prod | `localhost` | PostgreSQL host |
+| `DB_PORT` | prod | `5432` | PostgreSQL port |
+| `EMAIL_HOST` | prod | — | SMTP server hostname (e.g. `smtp.gmail.com`) |
+| `EMAIL_PORT` | prod | `587` | SMTP port |
+| `EMAIL_HOST_USER` | prod | — | SMTP login |
+| `EMAIL_HOST_PASSWORD` | prod | — | SMTP password or app password |
+| `DEFAULT_FROM_EMAIL` | prod | `noreply@ideas-block.com` | From address on outbound emails |
+| `TICKETS_BCC_EMAIL` | — | `contact@ideas-block.com` | BCC address on all ticket confirmation emails |
+| `STRIPE_PUBLISHABLE_KEY` | tickets | — | `pk_test_…` in dev, `pk_live_…` in prod |
+| `STRIPE_SECRET_KEY` | tickets | — | `sk_test_…` in dev, `sk_live_…` in prod |
+| `STRIPE_WEBHOOK_SECRET` | tickets | — | `whsec_…` — from Stripe Dashboard > Webhooks |
+| `STRIPE_PRICE_SUPPORTER` | subscriptions | — | Stripe Price ID for €5/mo Supporter plan |
+| `STRIPE_PRICE_PATRON` | subscriptions | — | Stripe Price ID for €15/mo Patron plan |
+| `MAILERLITE_API_KEY` | newsletter | _(blank)_ | MailerLite API v2 token — leave blank to disable |
+| `PLAUSIBLE_DOMAIN` | analytics | _(blank)_ | e.g. `ideas-block.com` — leave blank to disable |
+| `MEMBER_DISCOUNT_EUR` | — | `2.00` | EUR discount applied to ticket price for active members |
 
 ---
 
