@@ -4,7 +4,7 @@ beautifulsoup4
 certifi
 charset-normalizer
 defusedxml
-Django
+Django>=5.2,<6.0
 django-filter
 django-modelcluster
 django-permissionedforms
@@ -29,6 +29,6 @@ sqlparse
 telepath
 typing_extensions
 urllib3
-wagtail
+wagtail>=6.4,<7.0
 whitenoise
 Willow
