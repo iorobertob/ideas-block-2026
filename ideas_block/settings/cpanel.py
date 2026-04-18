@@ -7,6 +7,7 @@ Directory layout assumed:
         passenger_wsgi.py
         .env
         db.sqlite3
+        errors.log          ← Django error log (auto-created)
         git/                ← REPO_ROOT / BASE_DIR  (this git repository)
             manage.py
             static/         ← populated by collectstatic
@@ -14,13 +15,6 @@ Directory layout assumed:
             ideas_block/
                 settings/
                     cpanel.py   ← this file
-
-Key differences from production.py:
-- SQLite database stored in APP_ROOT (outside the git repo)
-- .env loaded from APP_ROOT (outside the git repo)
-- STATIC_ROOT and MEDIA_ROOT stay inside the repo (git/static/, git/media/)
-- WhiteNoise serves static files — Passenger routes all requests through Django
-- SECURE_SSL_REDIRECT disabled — SSL termination is handled by Apache/Namecheap
 """
 import os
 from .base import *
@@ -36,7 +30,9 @@ try:
 except ImportError:
     pass
 
-DEBUG = False
+# ── Core ──────────────────────────────────────────────────────────────────────
+# Set DEBUG=True in .env to see full tracebacks in the browser temporarily.
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
 
@@ -44,7 +40,7 @@ ALLOWED_HOSTS = os.environ.get(
     "ALLOWED_HOSTS", "ideas-block.com,www.ideas-block.com"
 ).split(",")
 
-# ── Database — SQLite stored in APP_ROOT (outside public_html, outside git) ──
+# ── Database — SQLite stored in APP_ROOT (outside git) ───────────────────────
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -52,18 +48,10 @@ DATABASES = {
     }
 }
 
-# ── Static & Media — inside git/ (BASE_DIR), served by WhiteNoise ────────────
-# base.py already sets STATIC_ROOT = BASE_DIR/static and MEDIA_ROOT = BASE_DIR/media
-# so no override needed here. WhiteNoise (already in MIDDLEWARE) serves static files
-# since Passenger routes all requests through Django — Apache never touches git/.
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+# ── Static & Media ────────────────────────────────────────────────────────────
+# base.py sets STATIC_ROOT = BASE_DIR/static and MEDIA_ROOT = BASE_DIR/media.
+# WhiteNoise (already in MIDDLEWARE in base.py) serves static files via Passenger.
+# Run: python manage.py collectstatic --settings=ideas_block.settings.cpanel
 
 # ── Email ─────────────────────────────────────────────────────────────────────
 EMAIL_BACKEND    = "django.core.mail.backends.smtp.EmailBackend"
@@ -75,8 +63,7 @@ EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
 DEFAULT_FROM_EMAIL  = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@ideas-block.com")
 
 # ── Security ──────────────────────────────────────────────────────────────────
-# SSL is terminated by Apache/Namecheap — Django must NOT redirect or it loops.
-SECURE_SSL_REDIRECT          = False
+SECURE_SSL_REDIRECT          = False  # SSL terminated by Apache
 SESSION_COOKIE_SECURE        = True
 CSRF_COOKIE_SECURE           = True
 SECURE_CONTENT_TYPE_NOSNIFF  = True
@@ -85,6 +72,20 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 
 # ── Wagtail ───────────────────────────────────────────────────────────────────
 WAGTAILADMIN_BASE_URL = os.environ.get("SITE_URL", "https://ideas-block.com")
+
+# ── Logging — always write errors to APP_ROOT/errors.log ─────────────────────
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": os.path.join(APP_ROOT, "errors.log"),
+            "level": "ERROR",
+        },
+    },
+    "root": {"handlers": ["file"], "level": "ERROR"},
+}
 
 try:
     from .local import *
