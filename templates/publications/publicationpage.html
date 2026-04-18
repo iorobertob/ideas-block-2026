@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags wagtaildocs_tags %}
+{% load wagtailcore_tags wagtailimages_tags %}
 
 {% block og_tags %}
 {% if page.cover_image %}{% image page.cover_image fill-1200x630 as og_img %}{% endif %}

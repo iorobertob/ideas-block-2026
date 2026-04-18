@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label"><a href="{{ page.get_parent.url }}">{{ page.get_parent.title }}</a></div>
+    <h1 class="page-header__title">{{ page.title }}</h1>
+    {% if page.intro %}<div class="page-header__subtitle prose">{{ page.intro|richtext }}</div>{% endif %}
+  </div>
+</div>
+
+<div class="container--narrow">
+  {% if page.body %}<div class="prose" style="margin-bottom:3rem;">{{ page.body|richtext }}</div>{% endif %}
+
+  <ul class="subpage-list">
+    {% for child in page.get_children.live.specific %}
+    <li class="subpage-list__item">
+      <a href="{{ child.url }}" class="subpage-list__link">
+        <span class="subpage-list__title">{{ child.title }}</span>
+        {% if child.intro %}<span class="subpage-list__desc">{{ child.intro }}</span>{% endif %}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

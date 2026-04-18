@@ -43,6 +43,14 @@
       <span>{{ request.user.email }}</span>
     </div>
     <div class="member-account-row">
+      <span style="color:var(--text-muted);">Account type</span>
+      <span>{{ member.account_type_display }}</span>
+    </div>
+    <div class="member-account-row">
+      <span style="color:var(--text-muted);">Content access</span>
+      <span>{{ member.access_level_display }}</span>
+    </div>
+    <div class="member-account-row">
       <span style="color:var(--text-muted);">Member since</span>
       <span>{{ member.joined_at|date:"d F Y" }}</span>
     </div>

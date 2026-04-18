@@ -238,3 +238,9 @@ STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 # Stripe Price IDs for subscriptions (create these in Stripe Dashboard)
 STRIPE_PRICE_SUPPORTER = os.environ.get("STRIPE_PRICE_SUPPORTER", "")
 STRIPE_PRICE_PATRON = os.environ.get("STRIPE_PRICE_PATRON", "")
+
+# ── Ticketing ─────────────────────────────────────────────────────────────────
+# BCC address for all ticket confirmation emails
+TICKETS_BCC_EMAIL = os.environ.get("TICKETS_BCC_EMAIL", "contact@ideas-block.com")
+# Discount in EUR applied to ticket price for active subscribers (Supporter/Patron)
+MEMBER_DISCOUNT_EUR = float(os.environ.get("MEMBER_DISCOUNT_EUR", "2.00"))

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags %}
+{% load wagtailcore_tags wagtailimages_tags members_tags %}
 
-{% block title %}Buy Tickets — {{ product_page.title }}{% endblock %}
+{% block title %}{% if is_free %}Register{% else %}Get tickets{% endif %} — {{ product_page.title }}{% endblock %}
 
 {% block content %}
 <div class="container">
   <div class="page-header">
     <div class="page-header__label"><a href="{% pageurl product_page %}" class="text-dim">← {{ product_page.title }}</a></div>
-    <h1 class="page-header__title">Get tickets</h1>
+    <h1 class="page-header__title">{% if is_free %}Register{% else %}Get tickets{% endif %}</h1>
   </div>
 
   {% if error %}
@@ -15,60 +15,115 @@
   {% endif %}
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;padding-bottom:4rem;">
-    <!-- Order summary -->
+    <!-- Event / product summary -->
     <div>
       {% if product_page.featured_image %}
         {% image product_page.featured_image width-600 as img %}
         <img src="{{ img.url }}" alt="{{ product_page.title }}" style="width:100%;aspect-ratio:16/9;object-fit:cover;margin-bottom:1.5rem;">
       {% endif %}
       <h2 style="font-family:var(--font-display);font-size:1.8rem;margin-bottom:0.5rem;">{{ product_page.title }}</h2>
-      {% if price %}
-        <div style="font-size:2rem;font-family:var(--font-display);color:var(--accent);margin-bottom:1rem;">€{{ price }}</div>
-      {% elif price_display %}
-        <div style="font-size:1.4rem;font-family:var(--font-display);color:var(--accent);margin-bottom:1rem;">{{ price_display }}</div>
+
+      {% if not is_free %}
+        {% if member_discount %}
+          <div style="font-size:1.1rem;font-family:var(--font-display);color:var(--text-dim);text-decoration:line-through;margin-bottom:0.25rem;">€{{ price }}</div>
+          <div style="font-size:2rem;font-family:var(--font-display);color:var(--accent);margin-bottom:0.25rem;">€{{ discounted_price }}</div>
+          <div style="font-size:0.75rem;color:var(--accent);margin-bottom:1rem;">Member discount applied (−€{{ member_discount }})</div>
+        {% elif price %}
+          <div style="font-size:2rem;font-family:var(--font-display);color:var(--accent);margin-bottom:1rem;">€{{ price }}</div>
+        {% elif price_display %}
+          <div style="font-size:1.4rem;font-family:var(--font-display);color:var(--accent);margin-bottom:1rem;">{{ price_display }}</div>
+        {% endif %}
       {% endif %}
+
+      {% if spots_remaining is not None %}
+        <div style="font-size:0.8rem;color:{% if spots_remaining == 0 %}var(--red){% elif spots_remaining <= 5 %}var(--accent){% else %}var(--text-dim){% endif %};margin-bottom:1rem;">
+          {% if spots_remaining == 0 %}Sold out{% elif spots_remaining == 1 %}1 spot remaining{% else %}{{ spots_remaining }} spots remaining{% endif %}
+        </div>
+      {% endif %}
+
       {% if product_page.intro %}
         <p style="color:var(--text-muted);line-height:1.7;">{{ product_page.intro }}</p>
       {% endif %}
     </div>
 
-    <!-- Checkout form -->
+    <!-- Registration / checkout form -->
     <div>
-      {% if is_free %}
-        <p style="color:var(--text-muted);margin-bottom:2rem;">This event is free. Register to secure your place.</p>
+      {% if sold_out %}
+        <p style="color:var(--red);font-size:1rem;">This event is sold out.</p>
+      {% else %}
+        {% if is_free %}
+          <p style="color:var(--text-muted);margin-bottom:2rem;">This event is free. Register to secure your place.</p>
+          <form method="post" action="{% url 'ticket_register' product_page.pk %}" style="display:flex;flex-direction:column;gap:1.25rem;">
+            {% csrf_token %}
+            <div>
+              <label class="form-label">Full name</label>
+              <input type="text" name="name" required class="form-input" placeholder="Your name">
+            </div>
+            <div>
+              <label class="form-label">Email address</label>
+              <input type="email" name="email" required class="form-input" placeholder="your@email.com">
+              <div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.4rem;">Confirmation will be sent here.</div>
+            </div>
+            <div>
+              <label class="form-label">Phone <span style="color:var(--text-dim);font-size:0.65rem;text-transform:none;">(optional)</span></label>
+              <input type="tel" name="phone" class="form-input" placeholder="+370 600 00000">
+            </div>
+            <div>
+              <label class="form-label">Quantity</label>
+              <select name="quantity" class="form-input">
+                {% for i in "12345"|make_list %}
+                  <option value="{{ forloop.counter }}">{{ forloop.counter }} place{% if forloop.counter > 1 %}s{% endif %}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="submit" class="btn-primary">Register →</button>
+          </form>
+
+        {% else %}
+          <form method="post" action="{% url 'ticket_session' product_page.pk %}" style="display:flex;flex-direction:column;gap:1.25rem;">
+            {% csrf_token %}
+            <div>
+              <label class="form-label">Full name</label>
+              <input type="text" name="name" required class="form-input" placeholder="Your name">
+            </div>
+            <div>
+              <label class="form-label">Email address</label>
+              <input type="email" name="email" required class="form-input" placeholder="your@email.com">
+              <div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.4rem;">Your ticket(s) will be sent here.</div>
+            </div>
+            <div>
+              <label class="form-label">Phone <span style="color:var(--text-dim);font-size:0.65rem;text-transform:none;">(optional)</span></label>
+              <input type="tel" name="phone" class="form-input" placeholder="+370 600 00000">
+            </div>
+            <div>
+              <label class="form-label">Quantity</label>
+              <select name="quantity" class="form-input">
+                {% for i in "12345"|make_list %}
+                  <option value="{{ forloop.counter }}">{{ forloop.counter }} ticket{% if forloop.counter > 1 %}s{% endif %}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            {% if member_discount %}
+              <div style="font-size:0.8rem;color:var(--accent);padding:0.75rem;border:1px solid var(--accent);">
+                ★ Member discount of €{{ member_discount }} per ticket will be applied.
+              </div>
+            {% elif not request.user.is_authenticated %}
+              <div style="font-size:0.75rem;color:var(--text-dim);">
+                <a href="/members/login/" style="color:var(--text-dim);">Log in</a> as a Supporter to get a €{{ member_discount_hint|default:"2" }} discount per ticket.
+              </div>
+            {% endif %}
+
+            <button type="submit" class="btn-primary" {% if not stripe_publishable_key %}disabled title="Payment not configured"{% endif %}>
+              Pay with card →
+            </button>
+
+            {% if not stripe_publishable_key %}
+              <p style="font-size:0.75rem;color:var(--text-dim);">Payment is not yet configured. Please contact <a href="mailto:contact@ideas-block.com">contact@ideas-block.com</a> to purchase tickets.</p>
+            {% endif %}
+          </form>
+        {% endif %}
       {% endif %}
-
-      <form method="post" action="{% url 'ticket_session' product_page.pk %}" style="display:flex;flex-direction:column;gap:1.25rem;">
-        {% csrf_token %}
-
-        <div>
-          <label class="form-label">Full name</label>
-          <input type="text" name="name" required class="form-input" placeholder="Your name">
-        </div>
-        <div>
-          <label class="form-label">Email address</label>
-          <input type="email" name="email" required class="form-input" placeholder="your@email.com">
-          <div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.4rem;">Your ticket(s) will be sent here.</div>
-        </div>
-        {% if not is_free %}
-        <div>
-          <label class="form-label">Quantity</label>
-          <select name="quantity" class="form-input">
-            {% for i in "12345"|make_list %}
-              <option value="{{ forloop.counter }}">{{ forloop.counter }} ticket{% if forloop.counter > 1 %}s{% endif %}</option>
-            {% endfor %}
-          </select>
-        </div>
-        {% endif %}
-
-        <button type="submit" class="btn-primary" {% if not stripe_publishable_key and not is_free %}disabled title="Payment not configured"{% endif %}>
-          {% if is_free %}Register →{% else %}Pay with card →{% endif %}
-        </button>
-
-        {% if not stripe_publishable_key and not is_free %}
-          <p style="font-size:0.75rem;color:var(--text-dim);">Payment is not yet configured. Please contact <a href="mailto:contact@ideas-block.com">contact@ideas-block.com</a> to purchase tickets.</p>
-        {% endif %}
-      </form>
     </div>
   </div>
 </div>

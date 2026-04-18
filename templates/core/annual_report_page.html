@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtaildocs_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">
+      <a href="{{ page.get_parent.get_parent.url }}">About</a> /
+      <a href="{{ page.get_parent.url }}">{{ page.get_parent.title }}</a>
+    </div>
+    <h1 class="page-header__title">{{ page.title }}</h1>
+    {% if page.intro %}<p class="page-header__subtitle">{{ page.intro }}</p>{% endif %}
+  </div>
+</div>
+
+<div class="container--narrow">
+  {% if page.body %}<div class="prose">{{ page.body|richtext }}</div>{% endif %}
+
+  {% if page.document or page.external_url %}
+  <div class="report-download" style="margin-top:3rem;padding:2rem;border:1px solid var(--border);background:var(--surface);">
+    <div class="section-label" style="margin-bottom:1rem;">Download report</div>
+    {% if page.document %}
+      {% docurl page.document as doc_url %}
+      <a href="{{ doc_url }}" download
+         style="display:inline-block;border:1px solid var(--text);color:var(--text);padding:0.75rem 2rem;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;">
+        Download PDF ↓
+      </a>
+    {% elif page.external_url %}
+      <a href="{{ page.external_url }}" target="_blank" rel="noopener"
+         style="display:inline-block;border:1px solid var(--text);color:var(--text);padding:0.75rem 2rem;font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;">
+        View report →
+      </a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

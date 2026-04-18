@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Attendees — {{ page.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label"><a href="{% pageurl page %}" class="text-dim">← {{ page.title }}</a></div>
+    <h1 class="page-header__title">Attendees</h1>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="meta-bar" style="margin-bottom:2rem;">
+    <span class="meta-bar__item"><strong>Total registrations</strong> {{ total_tickets }}</span>
+    <span class="meta-bar__item"><strong>Checked in</strong> {{ checked_in }}</span>
+    <span class="meta-bar__item"><strong>Orders</strong> {{ orders|length }}</span>
+    <span class="meta-bar__item" style="margin-left:auto;">
+      <a href="?format=csv" class="text-upper text-dim" style="font-size:0.72rem;letter-spacing:0.1em;">↓ Export CSV</a>
+    </span>
+  </div>
+
+  {% if orders %}
+  <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);color:var(--text-dim);font-size:0.7rem;letter-spacing:0.1em;text-transform:uppercase;">
+          <th style="text-align:left;padding:0.75rem 1rem 0.75rem 0;">Name</th>
+          <th style="text-align:left;padding:0.75rem 1rem;">Email</th>
+          <th style="text-align:center;padding:0.75rem 1rem;">Qty</th>
+          <th style="text-align:left;padding:0.75rem 1rem;">Status</th>
+          <th style="text-align:left;padding:0.75rem 1rem;">Date</th>
+          <th style="text-align:center;padding:0.75rem 0 0.75rem 1rem;">Checked in</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr style="border-bottom:1px solid var(--border-soft);">
+          <td style="padding:0.75rem 1rem 0.75rem 0;">
+            {{ order.buyer_name }}
+            {% if order.notes %}<br><small style="color:var(--text-dim);">{{ order.notes }}</small>{% endif %}
+          </td>
+          <td style="padding:0.75rem 1rem;">
+            <a href="mailto:{{ order.buyer_email }}" style="color:var(--text-dim);">{{ order.buyer_email }}</a>
+          </td>
+          <td style="text-align:center;padding:0.75rem 1rem;">{{ order.quantity }}</td>
+          <td style="padding:0.75rem 1rem;">
+            <span class="tag-pill {% if order.status == 'paid' %}tag-pill--active{% endif %}">
+              {{ order.get_status_display }}
+            </span>
+          </td>
+          <td style="padding:0.75rem 1rem;color:var(--text-dim);">
+            {{ order.paid_at|date:"d M Y H:i"|default:order.created_at|date:"d M Y H:i" }}
+          </td>
+          <td style="text-align:center;padding:0.75rem 0 0.75rem 1rem;">
+            {% with used=order.tickets.all %}
+              {% for ticket in used %}{% if ticket.used %}✓{% endif %}{% endfor %}
+              {{ used|length }}/{{ order.quantity }}
+            {% endwith %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <p style="color:var(--text-dim);padding:2rem 0;">No registrations yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

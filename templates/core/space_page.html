@@ -44,13 +44,45 @@
     </div>
     {% endif %}
 
-    {% if page.floor_plan_image %}
+    {% if page.gallery %}
+    <div style="margin:4rem 0;">
+      <div class="section-label" style="margin-bottom:1.5rem;">Photos</div>
+      <div class="space-gallery">
+        {% for block in page.gallery %}
+          {% if block.block_type == 'image' %}
+          <figure class="space-gallery__item">
+            {% image block.value.image width-900 as gimg %}
+            <img src="{{ gimg.url }}" alt="{{ block.value.caption }}">
+            {% if block.value.caption %}<figcaption>{{ block.value.caption }}</figcaption>{% endif %}
+          </figure>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if page.floor_plan_image or page.floor_plan_extra %}
     <div style="margin:4rem 0;">
       <div class="section-label" style="margin-bottom:1.5rem;">Floor plan</div>
-      <div class="floor-plan">
+      {% if page.floor_plan_image %}
+      <div class="floor-plan" style="margin-bottom:2rem;">
         {% image page.floor_plan_image width-1200 as fp %}
         <img src="{{ fp.url }}" alt="Floor plan — {{ page.title }}">
       </div>
+      {% endif %}
+      {% if page.floor_plan_extra %}
+      <div class="space-gallery space-gallery--plans">
+        {% for block in page.floor_plan_extra %}
+          {% if block.block_type == 'image' %}
+          <figure class="space-gallery__item">
+            {% image block.value.image width-900 as fpimg %}
+            <img src="{{ fpimg.url }}" alt="{{ block.value.caption }}">
+            {% if block.value.caption %}<figcaption>{{ block.value.caption }}</figcaption>{% endif %}
+          </figure>
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
     </div>
     {% endif %}
 

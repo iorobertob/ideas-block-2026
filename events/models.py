@@ -79,6 +79,7 @@ class EventPage(Page):
     sku = models.CharField(max_length=100, blank=True, help_text="Event SKU for ticket scanning")
     is_free = models.BooleanField(default=True)
     price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    capacity = models.PositiveIntegerField(null=True, blank=True, help_text="Maximum tickets/registrations. Leave blank for unlimited.")
     # WordPress import metadata
     wp_post_id = models.IntegerField(null=True, blank=True, db_index=True)
     language = models.CharField(max_length=5, default="en", choices=[("en", "English"), ("lt", "Lietuvių")])
@@ -115,6 +116,7 @@ class EventPage(Page):
             )),
             FieldPanel("is_free"),
             FieldPanel("price"),
+            FieldPanel("capacity"),
             FieldPanel("sku"),
             FieldPanel("use_stripe"),
             FieldPanel("ticket_url"),

@@ -63,6 +63,7 @@ class ProductPage(Page):
     )
     price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     price_display = models.CharField(max_length=100, blank=True, help_text="e.g. '€25 / free for members'")
+    capacity = models.PositiveIntegerField(null=True, blank=True, help_text="Maximum units/registrations. Leave blank for unlimited.")
     is_available = models.BooleanField(default=False, help_text="Show a purchase/registration CTA")
     use_stripe = models.BooleanField(default=False, help_text="Use built-in Stripe checkout instead of external URL")
     external_purchase_url = models.URLField(blank=True)
@@ -93,6 +94,7 @@ class ProductPage(Page):
             )),
             FieldPanel("price"),
             FieldPanel("price_display"),
+            FieldPanel("capacity"),
             FieldPanel("sku"),
             FieldPanel("is_available"),
             FieldPanel("use_stripe"),

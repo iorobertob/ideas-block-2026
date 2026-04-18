@@ -10,13 +10,15 @@ from wagtail.search import index
 
 
 class OpenCallsIndexPage(Page):
+    template = "opencalls/opencallsindexpage.html"
+
     intro = models.TextField(blank=True)
 
     content_panels = Page.content_panels + [
         FieldPanel("intro"),
     ]
 
-    subpage_types = ["opencalls.OpenCallPage"]
+    subpage_types = ["opencalls.OpenCallPage", "opencalls.PastCallsIndexPage"]
 
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
@@ -27,10 +29,8 @@ class OpenCallsIndexPage(Page):
             .filter(models.Q(deadline__gte=today) | models.Q(deadline__isnull=True))
             .order_by("deadline")
         )
-        context["closed_calls"] = (
-            all_calls
-            .filter(deadline__lt=today)
-            .order_by("-deadline")
+        context["past_calls_page"] = (
+            PastCallsIndexPage.objects.child_of(self).live().first()
         )
         return context
 
@@ -38,7 +38,32 @@ class OpenCallsIndexPage(Page):
         verbose_name = "Open Calls Index"
 
 
+class PastCallsIndexPage(Page):
+    template = "opencalls/pastcallsindexpage.html"
+
+    intro = models.TextField(blank=True)
+
+    content_panels = Page.content_panels + [
+        FieldPanel("intro"),
+    ]
+
+    subpage_types = ["opencalls.OpenCallPage"]
+    parent_page_types = ["opencalls.OpenCallsIndexPage"]
+
+    def get_context(self, request, *args, **kwargs):
+        context = super().get_context(request, *args, **kwargs)
+        context["past_calls"] = (
+            OpenCallPage.objects.child_of(self).live().order_by("-deadline")
+        )
+        return context
+
+    class Meta:
+        verbose_name = "Past Calls Index"
+
+
 class OpenCallPage(Page):
+    template = "opencalls/opencallpage.html"
+
     subtitle = models.CharField(max_length=255, blank=True)
     deadline = models.DateField(
         null=True, blank=True,
@@ -113,7 +138,7 @@ class OpenCallPage(Page):
         ], heading="How to apply"),
     ]
 
-    parent_page_types = ["opencalls.OpenCallsIndexPage"]
+    parent_page_types = ["opencalls.OpenCallsIndexPage", "opencalls.PastCallsIndexPage"]
 
     @property
     def is_open(self):

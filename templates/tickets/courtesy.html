@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Courtesy Ticket — Ideas Block{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:640px;padding:4rem 2rem;">
+  <div class="page-header">
+    <div class="page-header__label"><a href="{% url 'ticket_scanner' %}" class="text-dim">← Scanner</a></div>
+    <h1 class="page-header__title">Courtesy Ticket</h1>
+    <p class="page-header__subtitle" style="color:var(--text-dim);">Issue a complimentary ticket without payment — for press, artists, VIPs, or guests.</p>
+  </div>
+
+  {% if error %}
+    <div style="border:1px solid var(--red);color:var(--red);padding:1rem;margin-bottom:2rem;font-size:0.875rem;">{{ error }}</div>
+  {% endif %}
+
+  <form method="post" style="display:flex;flex-direction:column;gap:1.5rem;">
+    {% csrf_token %}
+
+    <div>
+      <label class="form-label">Event or product</label>
+      <select name="page_id" required class="form-input">
+        <option value="">— Select —</option>
+        {% for item in ticketable %}
+          <option value="{{ item.pk }}">{{ item.title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label class="form-label">Recipient name</label>
+      <input type="text" name="name" required class="form-input" placeholder="Full name">
+    </div>
+
+    <div>
+      <label class="form-label">Recipient email</label>
+      <input type="email" name="email" required class="form-input" placeholder="their@email.com">
+      <div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.4rem;">Ticket QR code will be sent here.</div>
+    </div>
+
+    <div>
+      <label class="form-label">Quantity</label>
+      <select name="quantity" class="form-input">
+        {% for i in "12345"|make_list %}
+          <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div>
+      <label class="form-label">Internal notes <span style="color:var(--text-dim);font-size:0.65rem;text-transform:none;">(optional — not sent to recipient)</span></label>
+      <textarea name="notes" class="form-input" rows="2" placeholder="e.g. Press pass, invited artist..."></textarea>
+    </div>
+
+    <button type="submit" class="btn-primary">Issue ticket →</button>
+  </form>
+</div>
+
+<style>
+.form-label { display:block; font-size:0.7rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--text-dim); margin-bottom:0.5rem; }
+.form-input { width:100%; background:var(--surface); border:1px solid var(--border); color:var(--text); padding:0.75rem; font-family:var(--font-body); font-size:0.9rem; outline:none; }
+.form-input:focus { border-color:var(--accent); }
+.btn-primary { background:var(--text); color:var(--bg); border:none; padding:0.9rem 2rem; font-family:var(--font-body); font-size:0.8rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:opacity 0.2s; }
+.btn-primary:hover { opacity:0.85; }
+</style>
+{% endblock %}

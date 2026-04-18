@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags wagtaildocs_tags %}
+{% load wagtailcore_tags wagtailimages_tags %}
 
 {% block og_tags %}
 {% if page.hero_image %}{% image page.hero_image fill-1200x630 as og_img %}{% endif %}
@@ -98,4 +98,51 @@
   </div>
 </section>
 {% endif %}
+
+<!-- Contact details -->
+{% if page.contact_address or page.contact_email or page.contact_phone %}
+<section id="contact" class="section container" style="border-top:1px solid var(--border-soft);margin-top:var(--space-xl);">
+  <div class="section-label">Contact</div>
+  <h2 class="section-title">Get in touch</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:3rem;margin-top:var(--space-md);">
+    {% if page.contact_address %}
+    <div>
+      <div class="text-upper text-dim" style="margin-bottom:0.5rem;font-size:0.65rem;letter-spacing:0.15em;">Address</div>
+      <div style="color:var(--text-muted);line-height:1.7;">{{ page.contact_address|linebreaksbr }}</div>
+    </div>
+    {% endif %}
+    {% if page.contact_email %}
+    <div>
+      <div class="text-upper text-dim" style="margin-bottom:0.5rem;font-size:0.65rem;letter-spacing:0.15em;">Email</div>
+      <a href="mailto:{{ page.contact_email }}" class="text-accent">{{ page.contact_email }}</a>
+    </div>
+    {% endif %}
+    {% if page.contact_phone %}
+    <div>
+      <div class="text-upper text-dim" style="margin-bottom:0.5rem;font-size:0.65rem;letter-spacing:0.15em;">Phone</div>
+      <a href="tel:{{ page.contact_phone }}" style="color:var(--text-muted);">{{ page.contact_phone }}</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<!-- Sub-pages navigation -->
+{% with children=page.get_children.live.specific %}
+{% if children %}
+<section class="section container" style="border-top:1px solid var(--border-soft);margin-top:var(--space-xl);">
+  <div class="section-label">Explore</div>
+  <ul class="subpage-list">
+    {% for child in children %}
+    <li class="subpage-list__item">
+      <a href="{{ child.url }}" class="subpage-list__link">
+        <span class="subpage-list__title">{{ child.title }}</span>
+        {% if child.intro %}<span class="subpage-list__desc">{{ child.intro }}</span>{% endif %}
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endwith %}
 {% endblock %}

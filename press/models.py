@@ -13,6 +13,8 @@ from wagtail.images.blocks import ImageChooserBlock
 class PressPage(Page):
     """Press room: contact, press kits, and coverage log."""
 
+    template = "press/presspage.html"
+
     intro = RichTextField(blank=True)
     press_contact_name = models.CharField(max_length=255, blank=True)
     press_contact_email = models.EmailField(blank=True)

@@ -49,6 +49,8 @@ class ContactPage(Page):
 
 class SpacePage(Page):
     """The Kompresorinė venue page with floor plan and description."""
+    parent_page_types = ["core.AboutPage"]
+
     intro = models.TextField(blank=True)
     body = RichTextField(blank=True)
     address = models.CharField(max_length=255, blank=True)
@@ -56,10 +58,26 @@ class SpacePage(Page):
         "wagtailimages.Image",
         null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
     )
+    gallery = StreamField(
+        [("image", StructBlock([
+            ("image", ImageChooserBlock()),
+            ("caption", CharBlock(required=False)),
+        ], label="Photo"))],
+        use_json_field=True, blank=True,
+        help_text="Additional venue photos",
+    )
     floor_plan_image = models.ForeignKey(
         "wagtailimages.Image",
         null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
-        help_text="Floor plan image",
+        help_text="Primary floor plan image",
+    )
+    floor_plan_extra = StreamField(
+        [("image", StructBlock([
+            ("image", ImageChooserBlock()),
+            ("caption", CharBlock(required=False)),
+        ], label="Floor plan detail"))],
+        use_json_field=True, blank=True,
+        help_text="Additional floor plan / technical drawings",
     )
     capacity = models.CharField(max_length=100, blank=True)
     booking_email = models.EmailField(blank=True)
@@ -69,9 +87,11 @@ class SpacePage(Page):
         FieldPanel("intro"),
         FieldPanel("hero_image"),
         FieldPanel("body"),
+        FieldPanel("gallery"),
         FieldPanel("address"),
         FieldPanel("capacity"),
         FieldPanel("floor_plan_image"),
+        FieldPanel("floor_plan_extra"),
         FieldPanel("booking_email"),
         FieldPanel("booking_info"),
     ]
@@ -96,6 +116,8 @@ class RichPage(Page):
 
 class AboutPage(Page):
     """Institutional about page with narrative sections, funders, and team overview."""
+    subpage_types = ["core.SpacePage", "core.RichPage", "core.TransparencyPage"]
+
 
     hero_image = models.ForeignKey(
         "wagtailimages.Image",
@@ -142,12 +164,65 @@ class AboutPage(Page):
         help_text="Funders, partners, sponsors — logos and links.",
     )
 
+    contact_address = models.TextField(blank=True, help_text="Physical address")
+    contact_email = models.EmailField(blank=True)
+    contact_phone = models.CharField(max_length=50, blank=True)
+
     content_panels = Page.content_panels + [
         FieldPanel("intro"),
         FieldPanel("hero_image"),
         FieldPanel("body"),
         FieldPanel("funders"),
+        MultiFieldPanel([
+            FieldPanel("contact_address"),
+            FieldPanel("contact_email"),
+            FieldPanel("contact_phone"),
+        ], heading="Contact details"),
     ]
 
     class Meta:
         verbose_name = "About Page"
+
+
+class TransparencyPage(Page):
+    """Transparency/governance section under About — houses annual reports."""
+    parent_page_types = ["core.AboutPage"]
+    subpage_types = ["core.AnnualReportPage"]
+
+    intro = models.TextField(blank=True)
+    body = RichTextField(blank=True)
+
+    content_panels = Page.content_panels + [
+        FieldPanel("intro"),
+        FieldPanel("body"),
+    ]
+
+    class Meta:
+        verbose_name = "Transparency Page"
+
+
+class AnnualReportPage(Page):
+    """Individual annual / financial report, child of TransparencyPage."""
+    parent_page_types = ["core.TransparencyPage"]
+    subpage_types = []
+
+    year = models.IntegerField()
+    intro = models.TextField(blank=True)
+    body = RichTextField(blank=True)
+    document = models.ForeignKey(
+        "wagtaildocs.Document",
+        null=True, blank=True, on_delete=models.SET_NULL, related_name="+",
+    )
+    external_url = models.URLField(blank=True, help_text="Link if report is hosted externally")
+
+    content_panels = Page.content_panels + [
+        FieldPanel("year"),
+        FieldPanel("intro"),
+        FieldPanel("body"),
+        FieldPanel("document"),
+        FieldPanel("external_url"),
+    ]
+
+    class Meta:
+        verbose_name = "Annual Report"
+        ordering = ["-year"]

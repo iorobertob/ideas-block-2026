@@ -10,74 +10,191 @@
   </div>
 
   <div style="margin-bottom:2rem;">
-    <label class="text-upper text-dim" style="display:block;margin-bottom:0.5rem;">Filter by event SKU (optional)</label>
+    <label class="text-upper text-dim" style="display:block;margin-bottom:0.5rem;">Filter by event / product (optional)</label>
     <select id="sku-filter" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:0.75rem;font-family:var(--font-body);font-size:0.9rem;outline:none;">
-      <option value="">All events</option>
-      {% for product in products %}
-        {% if product.sku %}
-          <option value="{{ product.sku }}">{{ product.title }}</option>
-        {% endif %}
+      <option value="">All events &amp; products</option>
+      {% for item in items %}
+        <option value="{{ item.sku }}">{{ item.title }}</option>
       {% endfor %}
     </select>
   </div>
 
-  <div id="reader" style="border:1px solid var(--border);"></div>
+  <!-- Camera scanner -->
+  <div id="camera-section">
+    <div id="reader" style="width:100%;background:#000;display:none;"></div>
+    <div style="display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap;">
+      <button id="btn-start" onclick="startCamera()" style="flex:1;background:var(--text);color:var(--bg);border:none;padding:0.9rem 1.5rem;font-family:var(--font-body);font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;">
+        Start Camera
+      </button>
+      <button id="btn-stop" onclick="stopCamera()" style="display:none;flex:1;background:none;border:1px solid var(--border);color:var(--text);padding:0.9rem 1.5rem;font-family:var(--font-body);font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;">
+        Stop Camera
+      </button>
+    </div>
+    <div id="camera-error" style="display:none;margin-top:0.75rem;font-size:0.8rem;color:var(--red);"></div>
+  </div>
 
-  <div id="result" style="display:none;padding:1.5rem;margin-top:1.5rem;border:1px solid;text-align:center;">
-    <div id="result-icon" style="font-size:2rem;margin-bottom:0.5rem;"></div>
-    <div id="result-msg" style="font-family:var(--font-display);font-size:1.4rem;"></div>
+  <!-- File / photo fallback (always visible as alternative) -->
+  <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border-soft);">
+    <label class="text-upper text-dim" style="display:block;font-size:0.65rem;margin-bottom:0.5rem;">Or scan from photo</label>
+    <input type="file" id="file-input" accept="image/*" capture="environment"
+      style="font-size:0.85rem;color:var(--text-dim);width:100%;">
+  </div>
+
+  <!-- Result card -->
+  <div id="result" style="display:none;padding:1.5rem;margin-top:1.5rem;border:1px solid;">
+    <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;">
+      <div id="result-icon" style="font-size:2.5rem;line-height:1;"></div>
+      <div id="result-msg" style="font-family:var(--font-display);font-size:1.4rem;"></div>
+    </div>
+    <div id="result-details" style="display:none;font-size:0.875rem;line-height:1.9;border-top:1px solid currentColor;padding-top:1rem;margin-top:0.25rem;">
+      <div><strong id="result-name"></strong></div>
+      <div id="result-email" style="opacity:0.7;"></div>
+      <div id="result-event" style="margin-top:0.4rem;font-family:var(--font-display);"></div>
+      <div style="margin-top:0.25rem;">Seat <strong id="result-seat"></strong> &nbsp;·&nbsp; <span id="result-status" style="text-transform:uppercase;font-size:0.7rem;letter-spacing:0.1em;"></span></div>
+      <div id="result-notes-row" style="display:none;margin-top:0.4rem;opacity:0.7;font-style:italic;"></div>
+    </div>
+    <button onclick="clearResult()" style="margin-top:1rem;background:none;border:1px solid currentColor;color:inherit;padding:0.4rem 1rem;font-family:var(--font-body);font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;">Clear</button>
+  </div>
+
+  <div style="margin-top:3rem;border-top:1px solid var(--border-soft);padding-top:1.5rem;display:flex;gap:1.5rem;flex-wrap:wrap;">
+    <a href="{% url 'ticket_courtesy' %}" style="font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);">+ Courtesy ticket</a>
   </div>
 </div>
 
-<script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
+const skuFilter = document.getElementById('sku-filter');
 const resultBox = document.getElementById('result');
 const resultIcon = document.getElementById('result-icon');
 const resultMsg = document.getElementById('result-msg');
-const skuFilter = document.getElementById('sku-filter');
+const resultDetails = document.getElementById('result-details');
+const resultName = document.getElementById('result-name');
+const resultEmail = document.getElementById('result-email');
+const resultEvent = document.getElementById('result-event');
+const resultSeat = document.getElementById('result-seat');
+const resultStatus = document.getElementById('result-status');
+const resultNotesRow = document.getElementById('result-notes-row');
+const btnStart = document.getElementById('btn-start');
+const btnStop = document.getElementById('btn-stop');
+const readerEl = document.getElementById('reader');
+const cameraError = document.getElementById('camera-error');
 
+let scanner = null;
 let lastScan = '';
 let cooldown = false;
 
-function showResult(ok, message) {
-  resultBox.style.display = 'block';
-  resultBox.style.borderColor = ok ? '#4caf50' : 'var(--red)';
-  resultBox.style.color = ok ? '#4caf50' : 'var(--red)';
-  resultIcon.textContent = ok ? '✓' : '✗';
-  resultMsg.textContent = message;
-  // Auto-hide after 4s
-  setTimeout(() => { resultBox.style.display = 'none'; }, 4000);
+// ── Result display ────────────────────────────────────────────────────────────
+
+function clearResult() {
+  resultBox.style.display = 'none';
+  lastScan = '';
+  cooldown = false;
 }
 
-function onScanSuccess(decodedText) {
+function showResult(data) {
+  const ok = data.ok;
+  const alreadyUsed = data.already_used;
+  const color = ok ? '#4caf50' : (alreadyUsed ? '#ff9800' : 'var(--red)');
+
+  resultBox.style.display = 'block';
+  resultBox.style.borderColor = color;
+  resultBox.style.color = color;
+  resultIcon.textContent = ok ? '✓' : (alreadyUsed ? '⚠' : '✗');
+  resultMsg.textContent = data.message;
+
+  if (data.name) {
+    resultDetails.style.display = 'block';
+    resultName.textContent = data.name;
+    resultEmail.textContent = data.email || '';
+    resultEvent.textContent = data.event || '';
+    resultSeat.textContent = data.seat || '';
+    resultStatus.textContent = data.status || '';
+    if (data.notes) {
+      resultNotesRow.style.display = 'block';
+      resultNotesRow.textContent = data.notes;
+    } else {
+      resultNotesRow.style.display = 'none';
+    }
+  } else {
+    resultDetails.style.display = 'none';
+  }
+}
+
+// ── Ticket verification ───────────────────────────────────────────────────────
+
+function verifyQR(decodedText) {
   if (cooldown || decodedText === lastScan) return;
   cooldown = true;
   lastScan = decodedText;
 
   fetch('/tickets/verify/', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': '{{ csrf_token }}',
-    },
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
     body: JSON.stringify({ qr_data: decodedText, sku: skuFilter.value }),
   })
   .then(r => r.json())
   .then(data => {
-    showResult(data.ok, data.message);
-    setTimeout(() => { cooldown = false; lastScan = ''; }, 3000);
+    showResult(data);
+    setTimeout(() => { cooldown = false; }, 3000);
   })
   .catch(() => {
-    showResult(false, 'Network error');
+    showResult({ ok: false, message: 'Network error' });
     setTimeout(() => { cooldown = false; }, 3000);
   });
 }
 
-const html5QrcodeScanner = new Html5QrcodeScanner(
-  "reader",
-  { fps: 10, qrbox: { width: 300, height: 300 } },
-  false
-);
-html5QrcodeScanner.render(onScanSuccess, () => {});
+// ── Camera ────────────────────────────────────────────────────────────────────
+
+async function startCamera() {
+  cameraError.style.display = 'none';
+  btnStart.disabled = true;
+  btnStart.textContent = 'Starting…';
+
+  try {
+    scanner = new Html5Qrcode('reader');
+    readerEl.style.display = 'block';
+
+    await scanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 280, height: 280 } },
+      verifyQR,
+      () => {}
+    );
+
+    btnStart.style.display = 'none';
+    btnStop.style.display = 'flex';
+  } catch (err) {
+    readerEl.style.display = 'none';
+    btnStart.disabled = false;
+    btnStart.textContent = 'Start Camera';
+    cameraError.style.display = 'block';
+    cameraError.textContent = 'Camera unavailable: ' + (err.message || err);
+  }
+}
+
+async function stopCamera() {
+  if (scanner) {
+    try { await scanner.stop(); } catch (_) {}
+    scanner = null;
+  }
+  readerEl.style.display = 'none';
+  btnStop.style.display = 'none';
+  btnStart.style.display = 'flex';
+  btnStart.disabled = false;
+  btnStart.textContent = 'Start Camera';
+}
+
+// ── File / photo fallback ─────────────────────────────────────────────────────
+
+document.getElementById('file-input').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  const tempScanner = new Html5Qrcode('reader');
+  readerEl.style.display = 'none';  // keep hidden; Html5Qrcode.scanFile doesn't need it visible
+  tempScanner.scanFile(file, true)
+    .then(text => { verifyQR(text); })
+    .catch(() => { showResult({ ok: false, message: 'Could not read QR code from image.' }); });
+  this.value = '';  // reset so same file can be re-picked
+});
 </script>
 {% endblock %}

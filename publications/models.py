@@ -10,6 +10,8 @@ from wagtail.search import index
 
 
 class PublicationsIndexPage(Page):
+    template = "publications/publicationsindexpage.html"
+
     intro = models.TextField(blank=True)
 
     content_panels = Page.content_panels + [
@@ -59,6 +61,8 @@ class PublicationsIndexPage(Page):
 
 
 class PublicationPage(Page):
+    template = "publications/publicationpage.html"
+
     pub_type = models.CharField(
         max_length=100,
         blank=True,
@@ -69,6 +73,10 @@ class PublicationPage(Page):
             ("journal", "Journal / magazine"),
             ("report", "Report"),
             ("online", "Online publication"),
+            ("article", "Article"),
+            ("album", "Music album"),
+            ("exhibition", "Exhibition"),
+            ("artwork", "Artwork"),
             ("other", "Other"),
         ],
         default="",

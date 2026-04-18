@@ -58,32 +58,15 @@
   <p style="color:var(--text-dim);padding:3rem 0;">No open calls at the moment. Check back soon.</p>
   {% endif %}
 
-  {% if closed_calls %}
+  {% if past_calls_page %}
   <section class="section" style="margin-top:var(--space-xl);">
     <div class="section-header" style="margin-bottom:2rem;">
       <div>
         <span class="section-label">Archive</span>
         <h2 class="section-title">Past calls</h2>
       </div>
+      <a href="{% pageurl past_calls_page %}" class="section-link">View all →</a>
     </div>
-    <ul class="post-list">
-      {% for call in closed_calls %}
-      <li class="post-list__item">
-        <a href="{% pageurl call %}" class="post-list__link">
-          <div class="post-list__date">
-            {% if call.deadline %}{{ call.deadline|date:"d M Y" }}{% endif %}
-          </div>
-          <div>
-            <div class="post-list__title">{{ call.title }}</div>
-            {% if call.call_type %}
-              <p class="post-list__excerpt">{{ call.get_call_type_display }}</p>
-            {% endif %}
-          </div>
-          <div class="post-list__arrow">→</div>
-        </a>
-      </li>
-      {% endfor %}
-    </ul>
   </section>
   {% endif %}
 </div>

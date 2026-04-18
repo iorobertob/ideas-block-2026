@@ -1,6 +1,7 @@
 import uuid
 import qrcode
 import io
+from django.conf import settings
 from django.db import models
 from django.core.files.base import ContentFile
 from django.utils import timezone
@@ -9,30 +10,50 @@ from django.utils import timezone
 class Order(models.Model):
     STATUS_PENDING = "pending"
     STATUS_PAID = "paid"
+    STATUS_REGISTERED = "registered"   # free registration confirmed (no payment)
+    STATUS_COURTESY = "courtesy"       # complimentary ticket issued by staff
     STATUS_FAILED = "failed"
     STATUS_REFUNDED = "refunded"
 
     STATUS_CHOICES = [
         (STATUS_PENDING, "Pending"),
         (STATUS_PAID, "Paid"),
+        (STATUS_REGISTERED, "Registered (free)"),
+        (STATUS_COURTESY, "Courtesy"),
         (STATUS_FAILED, "Failed"),
         (STATUS_REFUNDED, "Refunded"),
     ]
 
+    # Confirmed statuses — used for capacity and attendee queries
+    CONFIRMED_STATUSES = [STATUS_PAID, STATUS_REGISTERED, STATUS_COURTESY]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # What was purchased — link to a ProductPage or EventPage by URL/title
+
+    # What was purchased — link to a ProductPage or EventPage by Wagtail page PK
     product_page_id = models.IntegerField(null=True, blank=True, db_index=True)
     product_title = models.CharField(max_length=255)
     product_sku = models.CharField(max_length=100, blank=True)
 
     # Buyer info
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="orders",
+    )
     buyer_name = models.CharField(max_length=255)
     buyer_email = models.EmailField()
+    buyer_phone = models.CharField(max_length=40, blank=True)
 
     # Pricing
     quantity = models.PositiveSmallIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=8, decimal_places=2)
+    discount_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     currency = models.CharField(max_length=3, default="EUR")
+
+    # Staff notes (for courtesy tickets)
+    notes = models.TextField(blank=True)
 
     # Payment
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
@@ -52,10 +73,12 @@ class Order(models.Model):
 
     @property
     def total(self):
-        return self.unit_price * self.quantity
+        return (self.unit_price * self.quantity) - self.discount_amount
 
     def mark_paid(self):
-        self.status = self.STATUS_PAID
+        """Mark order as paid/confirmed and generate tickets."""
+        if self.status not in (self.STATUS_PAID, self.STATUS_REGISTERED, self.STATUS_COURTESY):
+            self.status = self.STATUS_PAID
         self.paid_at = timezone.now()
         self.save(update_fields=["status", "paid_at"])
         self._generate_tickets()
@@ -112,11 +135,11 @@ class Ticket(models.Model):
             return {"ok": False, "message": "Ticket already used.", "ticket": self}
         if sku and self.order.product_sku and sku != self.order.product_sku:
             return {"ok": False, "message": "Ticket is for a different event.", "ticket": self}
-        if self.order.status != Order.STATUS_PAID:
-            return {"ok": False, "message": "Order not paid.", "ticket": self}
+        if self.order.status not in Order.CONFIRMED_STATUSES:
+            return {"ok": False, "message": "Order not confirmed.", "ticket": self}
         self.used = True
         self.scanned_at = timezone.now()
-        self.save(update_fields=["used", "scanned_at"])
+        self.save(update_fields=["used", "scanned_at", "scanned_by"])
         return {
             "ok": True,
             "message": f"Valid — {self.order.product_title} × {self.seat_number}/{self.order.quantity}",
@@ -139,7 +162,7 @@ class Subscription(models.Model):
     name = models.CharField(max_length=255, blank=True)
     plan = models.CharField(max_length=30, choices=PLAN_CHOICES, default=PLAN_SUPPORTER)
     stripe_customer_id = models.CharField(max_length=255, blank=True)
-    stripe_subscription_id = models.CharField(max_length=255, blank=True)
+    stripe_subscription_id = models.CharField(max_length=255, blank=True, db_index=True)
     active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

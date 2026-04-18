@@ -13,17 +13,27 @@
 
   <!-- Search -->
   <form method="get" class="search-form">
-    <input type="search" name="q" value="{{ query }}" placeholder="Search projects…"
->
+    <input type="search" name="q" value="{{ query }}" placeholder="Search projects…">
     <button type="submit">Search</button>
     {% if query %}<a href="?" class="search-clear">✕ Clear</a>{% endif %}
   </form>
 
+  {% if project_types %}
+  <div class="filter-bar">
+    <a href="?" class="filter-btn {% if not request.GET.type %}active{% endif %}">All types</a>
+    {% for t in project_types %}
+      <a href="?type={{ t }}{% if request.GET.year %}&year={{ request.GET.year }}{% endif %}"
+         class="filter-btn {% if request.GET.type == t %}active{% endif %}">{{ t|title }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   {% if years %}
   <div class="filter-bar">
-    <a href="?" class="filter-btn {% if not request.GET.year %}active{% endif %}">All</a>
+    <a href="?{% if request.GET.type %}type={{ request.GET.type }}{% endif %}" class="filter-btn {% if not request.GET.year %}active{% endif %}">All years</a>
     {% for y in years %}
-      <a href="?year={{ y }}" class="filter-btn {% if request.GET.year == y|stringformat:'s' %}active{% endif %}">{{ y }}</a>
+      <a href="?year={{ y }}{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}"
+         class="filter-btn {% if request.GET.year == y|stringformat:'s' %}active{% endif %}">{{ y }}</a>
     {% endfor %}
   </div>
   {% endif %}
@@ -38,9 +48,11 @@
         {% endif %}
       </div>
       <div class="card__body">
-        {% if project.year %}
-          <div class="card__meta">{{ project.year }}</div>
-        {% endif %}
+        <div class="card__meta">
+          {% if project.year %}{{ project.year }}{% endif %}
+          {% if project.status %}<span class="tag-pill" style="margin-left:.5rem;">{{ project.get_status_display }}</span>{% endif %}
+          {% if project.project_type %}<span class="tag-pill" style="margin-left:.25rem;">{{ project.get_project_type_display }}</span>{% endif %}
+        </div>
         <div class="card__title">{{ project.title }}</div>
         {% if project.intro %}
           <p class="card__excerpt">{{ project.intro|truncatechars:100 }}</p>

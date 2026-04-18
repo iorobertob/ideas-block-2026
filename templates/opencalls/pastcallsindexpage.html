@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load wagtailcore_tags wagtailimages_tags %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div class="page-header__label">Open Calls</div>
+    <h1 class="page-header__title">Past Calls</h1>
+    {% if page.intro %}
+      <p class="page-header__subtitle">{{ page.intro }}</p>
+    {% endif %}
+  </div>
+
+  {% if past_calls %}
+  <section class="section">
+    <ul class="post-list">
+      {% for call in past_calls %}
+      <li class="post-list__item">
+        <a href="{% pageurl call %}" class="post-list__link">
+          <div class="post-list__date">
+            {% if call.deadline %}{{ call.deadline|date:"d M Y" }}{% endif %}
+          </div>
+          <div>
+            <div class="post-list__title">{{ call.title }}</div>
+            {% if call.call_type %}
+              <p class="post-list__excerpt">{{ call.get_call_type_display }}</p>
+            {% endif %}
+          </div>
+          <div class="post-list__arrow">→</div>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
+  <p style="color:var(--text-dim);padding:3rem 0;">No past calls yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

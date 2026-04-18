@@ -38,7 +38,7 @@
       <div class="card__body">
         <div class="card__title">{{ product.title }}</div>
         {% if product.intro %}
-          <p class="card__excerpt">{{ product.intro|truncatechars:120 }}</p>
+          <p class="card__excerpt">{{ product.intro|striptags|truncatechars:120 }}</p>
         {% endif %}
         <div style="margin-top:auto;padding-top:0.75rem;display:flex;align-items:center;justify-content:space-between;">
           {% if product.price_display %}

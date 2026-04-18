@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.models import User
@@ -76,8 +77,8 @@ def member_dashboard(request):
             pass
 
     orders = Order.objects.filter(
-        buyer_email=request.user.email
-    ).order_by("-created_at")[:20]
+        Q(user=request.user) | Q(buyer_email=request.user.email)
+    ).exclude(status=Order.STATUS_PENDING).order_by("-created_at").distinct()[:20]
 
     return render(request, "members/dashboard.html", {
         "member": member,

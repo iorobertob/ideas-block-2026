@@ -13,6 +13,7 @@ from search import views as search_views
 from tickets import urls as tickets_urls
 from core import urls as core_urls
 from members import urls as members_urls
+from projects import urls as projects_urls
 from blog.feeds import LatestBlogFeed, LatestBlogAtomFeed
 from events.feeds import UpcomingEventsFeed, UpcomingEventsAtomFeed
 from django.contrib.sitemaps.views import sitemap
@@ -26,6 +27,7 @@ urlpatterns = [
     path("tickets/", include(tickets_urls)),
     path("core/", include(core_urls)),
     path("members/", include(members_urls)),
+    path("", include(projects_urls)),
     # Language switcher — POST to /i18n/set_language/ with next + language
     path("i18n/", include("django.conf.urls.i18n")),
     # Sitemap
