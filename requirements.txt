@@ -10,7 +10,7 @@ django-modelcluster
 django-permissionedforms
 django-stubs-ext
 django-taggit
-django-tasks
+django-tasks>=0.7
 django-treebeard
 djangorestframework
 draftjs_exporter
