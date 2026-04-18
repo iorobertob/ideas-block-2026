@@ -30,5 +30,4 @@ telepath
 typing_extensions
 urllib3
 wagtail>=6.4,<7.0
-whitenoise
 Willow

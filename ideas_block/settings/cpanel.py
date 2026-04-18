@@ -8,10 +8,11 @@ Directory layout assumed:
         .env
         db.sqlite3
         errors.log          ← Django error log (auto-created)
-        git/                ← REPO_ROOT / BASE_DIR  (this git repository)
-            manage.py
+        public/             ← served directly by Apache (no Python)
             static/         ← populated by collectstatic
             media/          ← user-uploaded files (transferred via rsync)
+        git/                ← REPO_ROOT / BASE_DIR  (this git repository)
+            manage.py
             ideas_block/
                 settings/
                     cpanel.py   ← this file
@@ -49,9 +50,11 @@ DATABASES = {
 }
 
 # ── Static & Media ────────────────────────────────────────────────────────────
-# base.py sets STATIC_ROOT = BASE_DIR/static and MEDIA_ROOT = BASE_DIR/media.
-# WhiteNoise (already in MIDDLEWARE in base.py) serves static files via Passenger.
+# Passenger serves ~/ideas_block/public/ directly via Apache (no Python involved).
+# Static files land in public/static/ and media in public/media/ after collectstatic.
 # Run: python manage.py collectstatic --settings=ideas_block.settings.cpanel
+STATIC_ROOT = os.path.join(APP_ROOT, "public", "static")
+MEDIA_ROOT  = os.path.join(APP_ROOT, "public", "media")
 
 # ── Email ─────────────────────────────────────────────────────────────────────
 EMAIL_BACKEND    = "django.core.mail.backends.smtp.EmailBackend"
