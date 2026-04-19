@@ -42,14 +42,15 @@ urlpatterns = [
 ]
 
 
+from django.conf.urls.static import static
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 if settings.DEBUG:
-    from django.conf.urls.static import static
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
     from django.shortcuts import render as _render
 
-    # Serve static and media files from development server
+    # Serve static files from development server
     urlpatterns += staticfiles_urlpatterns()
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     # Preview custom error pages in dev
     urlpatterns += [
         path("__404__/", lambda r: _render(r, "404.html", status=404)),
