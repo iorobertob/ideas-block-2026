@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.conf.urls.i18n import i18n_patterns
 from django.contrib import admin
 from .api import api_router
@@ -42,14 +42,16 @@ urlpatterns = [
 ]
 
 
-from django.conf.urls.static import static
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+from django.views.static import serve as _serve_static
+urlpatterns += [
+    re_path(r'^media/(?P<path>.+)$', _serve_static, {'document_root': settings.MEDIA_ROOT}),
+]
 
 if settings.DEBUG:
+    from django.conf.urls.static import static
     from django.contrib.staticfiles.urls import staticfiles_urlpatterns
     from django.shortcuts import render as _render
 
-    # Serve static files from development server
     urlpatterns += staticfiles_urlpatterns()
     # Preview custom error pages in dev
     urlpatterns += [
