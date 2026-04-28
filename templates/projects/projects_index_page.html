@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load wagtailcore_tags wagtailimages_tags static %}
+{% load wagtailcore_tags wagtailimages_tags %}
 
 {% block content %}
 <div class="container">
@@ -45,8 +45,6 @@
         {% if vi.featured_image %}
           {% image vi.featured_image fill-600x450 as img %}
           <img src="{{ img.url }}" alt="{{ vi.title }}" loading="lazy">
-        {% else %}
-          <img src="{% static 'verbalimages/Davide.jpg' %}" alt="{{ vi.title }}" loading="lazy" style="object-fit:cover;width:100%;height:100%;">
         {% endif %}
       </div>
       <div class="card__body">

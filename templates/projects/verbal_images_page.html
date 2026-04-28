@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static wagtailcore_tags wagtailimages_tags %}
+{% load wagtailcore_tags wagtailimages_tags %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
@@ -390,9 +390,10 @@ div.dt-buttons .dt-button:hover {
              role="tabpanel" aria-labelledby="tab-contact">
       <div class="vild-contact">
         <h2>Davide Castiglione</h2>
-        <img src="{% static 'verbalimages/Davide.jpg' %}"
-             alt="Davide Castiglione"
-             class="vild-contact__photo">
+        {% if page.featured_image %}
+          {% image page.featured_image width-300 as davide_img %}
+          <img src="{{ davide_img.url }}" alt="Davide Castiglione" class="vild-contact__photo">
+        {% endif %}
         <p>Researcher in stylistics and cognitive poetics.<br>
            Vilnius University, Faculty of Philology.</p>
         <p><a href="mailto:davide.castiglione@flf.vu.lt" class="vild-contact__email">
