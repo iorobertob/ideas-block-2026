@@ -55,3 +55,6 @@ redis_data/
 node_modules/
 npm-debug.log
 yarn-error.log
+
+# ── Verbal Images in Literature Database.   ──────────────────────────
+verbalimagesinliterature

@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+{% load static wagtailcore_tags wagtailimages_tags %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
+<style>
+/* ── Tab bar ─────────────────────────────────────────────── */
+.vild-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.vild-tabs::-webkit-scrollbar { display: none; }
+
+.vild-tab {
+  flex-shrink: 0;
+  padding: .65rem 1.5rem;
+  font-size: .875rem;
+  font-family: var(--font-body);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  cursor: pointer;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  transition: color var(--transition), border-color var(--transition);
+}
+.vild-tab:hover { color: var(--text); }
+.vild-tab.is-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ── Panel visibility ────────────────────────────────────── */
+.vild-panel { display: none; }
+.vild-panel.is-active { display: block; }
+
+/* ── DataTables dark theme ───────────────────────────────── */
+.dataTables_wrapper {
+  color: var(--text);
+}
+.dataTables_wrapper .dataTables_filter label,
+.dataTables_wrapper .dataTables_length label,
+.dataTables_wrapper .dataTables_info {
+  color: var(--text-muted);
+  font-size: .82rem;
+}
+.dataTables_wrapper .dataTables_filter input,
+.dataTables_wrapper .dataTables_length select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .3rem .6rem;
+  color: var(--text);
+  margin-left: .4rem;
+}
+.dataTables_wrapper .dataTables_filter input:focus,
+.dataTables_wrapper .dataTables_length select:focus {
+  outline: none;
+  border-color: var(--accent-dim);
+}
+
+/* Table */
+table.dataTable {
+  border-collapse: collapse;
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+table.dataTable thead th {
+  background: var(--surface-2);
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-body);
+  font-size: .75rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: .6rem .8rem;
+}
+table.dataTable thead th.sorting::after,
+table.dataTable thead th.sorting_asc::after,
+table.dataTable thead th.sorting_desc::after {
+  color: var(--accent-dim);
+}
+table.dataTable tbody tr {
+  background: var(--surface);
+}
+table.dataTable tbody tr:nth-child(even) {
+  background: var(--surface-2);
+}
+table.dataTable tbody tr:hover > td {
+  background: var(--surface-3);
+}
+table.dataTable tbody td {
+  border-color: var(--border-soft);
+  font-size: .84rem;
+  vertical-align: middle;
+  padding: .55rem .8rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive child rows */
+table.dataTable tbody td.child {
+  background: var(--bg-warm) !important;
+  padding: .75rem 1rem .75rem 2.5rem;
+  white-space: normal !important;
+}
+table.dataTable tbody tr.child {
+  background: var(--bg-warm) !important;
+}
+.dtr-details {
+  display: block;
+  width: 100%;
+}
+.dtr-details li {
+  list-style: none;
+  border-bottom: 1px solid var(--border-soft);
+  padding: .4rem 0;
+  font-size: .83rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+.dtr-details li:last-child { border-bottom: none; }
+.dtr-title {
+  color: var(--accent);
+  font-size: .72rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+.dtr-data {
+  color: var(--text);
+  flex: 1;
+  font-size: .84rem;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Expand icon */
+table.dataTable tbody td.dtr-control::before {
+  background-color: var(--accent-dim) !important;
+  border-color: var(--accent-dim) !important;
+  box-shadow: none !important;
+  line-height: 16px;
+}
+table.dataTable tbody tr.parent td.dtr-control::before {
+  background-color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+
+/* Pagination */
+.dataTables_wrapper .dataTables_paginate { margin-top: .75rem; }
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  color: var(--text-muted) !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--radius) !important;
+  padding: .25rem .55rem !important;
+  font-size: .82rem;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--surface-3) !important;
+  border-color: var(--border) !important;
+  color: var(--accent) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+  color: var(--text-dim) !important;
+  background: none !important;
+}
+
+/* Export buttons */
+div.dt-buttons { margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: .35rem; }
+div.dt-buttons .dt-button {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-muted) !important;
+  border-radius: var(--radius) !important;
+  font-size: .75rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: .3rem .8rem !important;
+  transition: color var(--transition);
+  box-shadow: none !important;
+}
+div.dt-buttons .dt-button:hover {
+  color: var(--accent) !important;
+  background: var(--surface-3) !important;
+}
+
+/* DataTables top bar layout */
+.dataTables_wrapper .dataTables_length { float: left; }
+.dataTables_wrapper .dataTables_filter { float: right; }
+.dataTables_wrapper::after { content: ''; display: table; clear: both; }
+
+@media (max-width: 600px) {
+  .dataTables_wrapper .dataTables_length,
+  .dataTables_wrapper .dataTables_filter {
+    float: none;
+    text-align: left;
+    margin-bottom: .5rem;
+  }
+  div.dt-buttons { gap: .25rem; }
+  div.dt-buttons .dt-button { font-size: .7rem; padding: .25rem .6rem !important; }
+  table.dataTable thead th { font-size: .7rem; padding: .45rem .5rem; }
+  table.dataTable tbody td { font-size: .8rem; padding: .4rem .5rem; }
+}
+
+/* ── Contact tab ─────────────────────────────────────────── */
+.vild-contact { max-width: 480px; }
+.vild-contact__photo {
+  width: min(220px, 60vw);
+  height: auto;
+  border-radius: var(--radius);
+  margin: 1.5rem 0;
+  display: block;
+}
+.vild-contact__email {
+  display: inline-block;
+  margin-top: .5rem;
+  color: var(--accent);
+  font-size: 1rem;
+  word-break: break-all;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<article>
+
+  <!-- ── Page header ──────────────────────────────────────── -->
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header__label"><a href="/projects/" class="text-dim">Projects</a></div>
+      <h1 class="page-header__title">{{ page.title }}</h1>
+      {% if page.intro %}
+        <p class="page-header__subtitle">{{ page.intro }}</p>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if page.featured_image %}
+  <div class="container">
+    {% image page.featured_image width-1200 as img %}
+    <img src="{{ img.url }}" alt="{{ page.title }}" class="featured-image">
+  </div>
+  {% endif %}
+
+  <!-- ── Meta bar + tab nav (narrow) ─────────────────────── -->
+  <div class="container--narrow">
+    <div class="meta-bar">
+      {% if page.status %}
+        <span class="meta-bar__item"><span class="tag-pill">{{ page.get_status_display }}</span></span>
+      {% endif %}
+      {% if page.project_type %}
+        <span class="meta-bar__item"><strong>Type</strong> {{ page.get_project_type_display }}</span>
+      {% endif %}
+      {% if page.year %}
+        <span class="meta-bar__item"><strong>Since</strong> {{ page.year }}</span>
+      {% endif %}
+    </div>
+
+    <nav class="vild-tabs" role="tablist" aria-label="Page sections">
+      <button class="vild-tab is-active" role="tab" aria-selected="true"
+              aria-controls="panel-database" id="tab-database">Database</button>
+      <button class="vild-tab" role="tab" aria-selected="false"
+              aria-controls="panel-about" id="tab-about">About</button>
+      <button class="vild-tab" role="tab" aria-selected="false"
+              aria-controls="panel-contact" id="tab-contact">Contact</button>
+    </nav>
+  </div>
+
+  <!-- ── DATABASE panel — full container width ───────────── -->
+  <div class="container vild-panel is-active" id="panel-database"
+       role="tabpanel" aria-labelledby="tab-database">
+    {% if csv_rows %}
+      <table id="vild-table" class="display nowrap" style="width:100%">
+        <thead>
+          <tr>{% for h in csv_headers %}<th>{{ h }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+          {% for row in csv_rows %}
+          <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p style="color:var(--text-muted);">
+        Database file not found. Place <code>database.csv</code> at
+        <code>data/verbalimages/database.csv</code>.
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- ── ABOUT + CONTACT + back link — narrow ────────────── -->
+  <div class="container--narrow">
+
+    <!-- About panel -->
+    <section class="vild-panel" id="panel-about"
+             role="tabpanel" aria-labelledby="tab-about">
+      <div class="prose">
+
+        <h2>Overview of the database (VILD)</h2>
+        <p>Welcome to the <strong>Verbal Images in Literature Database</strong> (<strong>VILD</strong>). At the time of writing [30/11/23] VILD contains <strong>94</strong> manually pre-annotated verbal images from a variety of authors and genres. Each verbal image occupies a row of the database; each column adds relevant <strong>contextual information</strong> (the poem, play or novel hosting the image, its genre, author, the critic who noticed it) as well as <strong>stylistic information</strong> (the size of the image counted in syllables and words, its location within the hosting text, the presence of metaphor and deixis, and more). Stylistic data is either <strong>quantitative</strong> (discrete, as in the number of syllables; or continuous as in imageability ratings) or <strong>qualitative</strong> (nominal: as in the critical comments provided or the semantic domains assigned; or nominal and binary as the presence or absence of a characteristic).</p>
+        <p>VILD is an offshoot of the larger project "Verbal to visual: the image in poetic discourse", financially supported by the Research Council of Lithuania under grant Nr 09.3.3-LMT-K-712-19-0204 and which ran from September 2020 to August 2022.</p>
+
+        <h3>Parameters (columns)</h3>
+
+        <h4>Text and context</h4>
+        <ul>
+          <li><strong>Verbal image</strong>: an imageable stretch of text</li>
+          <li><strong>Verbal image + co-text</strong>: the verbal image and surrounding text</li>
+          <li><strong>Verbal image (orig. if not EN)</strong>: the image in its original non-English language</li>
+          <li><strong>Author</strong>: who crafted the image, e.g. Shakespeare or Whitman</li>
+          <li><strong>Text</strong>: the hosting text, e.g. <em>Othello</em> or <em>In a Station of the Metro</em></li>
+          <li><strong>Genre</strong>: poetry, drama, prose (fiction, essay, news)</li>
+          <li><strong>Line(s)</strong>: line number(s) in verse texts</li>
+          <li><strong>Noted by</strong>: the critic who noticed the image (author-date style)</li>
+          <li><strong>Full comment</strong>: the critic's commentary, always including the word 'image'</li>
+        </ul>
+
+        <h4>Stylistic information</h4>
+        <ul>
+          <li><strong>Sense(s) elicited</strong>: visual, aural, olfactory, haptic, gustatory</li>
+          <li><strong>Perception flag (PF)</strong>: words explicitly signalling that an act of perception is occurring</li>
+          <li><strong>Metaphor</strong>: conceptual mapping in SMALL CAPS (e.g. FACES ARE PETALS)</li>
+          <li><strong>Deixis</strong>: indexical words pointing to a context — you, today, here, this</li>
+          <li><strong>Foregrounding (position)</strong>: text-initial or text-final images stand out more</li>
+          <li><strong>Foregrounding (devices)</strong>: parallelism, negation, list of three, rhyme</li>
+          <li><strong>Size</strong>: length in syllables, words, characters, and lines</li>
+          <li><strong>IMAG rate of Head</strong>: imageability rating of the most vivid word (<a href="https://pubmed.ncbi.nlm.nih.gov/30206797/" target="_blank" rel="noopener" style="color:var(--accent);">The Glasgow Norms</a>)</li>
+          <li><strong>Thematic core</strong>: semantic domain label from the <a href="https://ucrel.lancs.ac.uk/usas/USASSemanticTagset.pdf" target="_blank" rel="noopener" style="color:var(--accent);">USAS tagset</a> (e.g. B1, L3, S2)</li>
+        </ul>
+        <p>Nearly all parameters (except Sense(s) elicited, Size and Thematic core) likely act as <strong>image boosters</strong>, enhancing the perceived vividness and memorability of a verbal image.</p>
+
+        <h3>What are verbal images?</h3>
+        <p>Verbal images are <strong>stretches of text</strong> with a higher-than-chance potential to trigger mental images and vivid sensations in readers. They construct sensorially rich fictional worlds whilst attracting critics' interpretive efforts — eliciting immersive presence effects and paving the way to symbolic significance.</p>
+
+        <h3>How are they made?</h3>
+        <p>Verbal images often coincide with descriptive phrases, narrative clauses, and image-metaphors, but they are argued to be an even more fundamental unit of literary meaning. Their most prominent characteristics are <strong>imageable vocabulary</strong> and <strong>metaphor</strong>, plus an average length of <strong>18 syllables</strong> or <strong>13 words</strong>. Recurrent ancillary characteristics include stylistic strategies (lists, parallelism, deixis, topic shifts, negation) that act as imagery boosters. Typical semantic domains relate to the body, people, animals, plants, and the environment.</p>
+
+        <h3>How was the database compiled?</h3>
+        <p>Verbal images were manually collected from academic literary criticism. Two conditions had to be met:</p>
+        <ol>
+          <li>The scholar used the word 'image(s)' in commentary — near-synonyms like 'scene', 'figure' or 'picture' were excluded.</li>
+          <li>The word 'image(s)' explicitly refers to a specific stretch of text that is quoted or unequivocally recoverable.</li>
+        </ol>
+        <p>About one third of the images were contributed by former student Ugnė Spečiūtė. The compiler is not listed as a critic to prevent personal theorising from affecting the data.</p>
+
+        <h3>Languages</h3>
+        <p>Mostly English; a few examples in French, Italian, and Spanish, all with accompanying English translations.</p>
+
+        <h3>Who might use it?</h3>
+        <ul>
+          <li>A <strong>writer, poet, artist or content creator</strong> looking for inspiration on how canonical authors described specific entities</li>
+          <li>A <strong>teacher</strong> wanting customised example sets for imagination or interpretation exercises</li>
+          <li>A <strong>literary scholar</strong> interested in how verbal images have been interpreted</li>
+          <li>A <strong>(cognitive) linguist</strong> interested in linguistic resources for sensory experience</li>
+          <li>A <strong>psychologist or psycholinguist</strong> needing controlled stimuli — verbal images as ROIs for eye-tracking studies</li>
+          <li>An <strong>AI researcher or developer</strong> wanting well-crafted, highly picturable linguistic prompts</li>
+        </ul>
+
+        <h3>Can I contribute?</h3>
+        <p>Yes — the database is open-ended and growing. You can contribute by:</p>
+        <ul>
+          <li>Finding new verbal images meeting both conditions above and emailing them to <a href="mailto:davide.castiglione@flf.vu.lt" style="color:var(--accent);">davide.castiglione@flf.vu.lt</a> (include the original paper as PDF)</li>
+          <li>Assisting with a corpus of academic literary criticism articles</li>
+          <li>Flagging inaccuracies or suggesting improvements — annotation for meter and syntax is particularly needed</li>
+        </ul>
+        <p>Students and passionate readers are also welcome. Contact Davide if you want to be involved in empirical studies, surveys, statistical analysis, or applying the model to other languages.</p>
+
+      </div>
+    </section>
+
+    <!-- Contact panel -->
+    <section class="vild-panel" id="panel-contact"
+             role="tabpanel" aria-labelledby="tab-contact">
+      <div class="vild-contact">
+        <h2>Davide Castiglione</h2>
+        <img src="{% static 'verbalimages/Davide.jpg' %}"
+             alt="Davide Castiglione"
+             class="vild-contact__photo">
+        <p>Researcher in stylistics and cognitive poetics.<br>
+           Vilnius University, Faculty of Philology.</p>
+        <p><a href="mailto:davide.castiglione@flf.vu.lt" class="vild-contact__email">
+          davide.castiglione@flf.vu.lt
+        </a></p>
+      </div>
+    </section>
+
+    <div class="mt-lg">
+      <a href="/projects/" class="text-dim text-upper">← Back to projects</a>
+    </div>
+
+  </div><!-- /.container--narrow -->
+
+</article>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+<script>
+(function () {
+
+  /* ── Tab switching ────────────────────────────────────── */
+  var tabs   = document.querySelectorAll('.vild-tab');
+  var panels = document.querySelectorAll('.vild-panel');
+
+  function activateTab(target) {
+    tabs.forEach(function (t) {
+      var on = t.getAttribute('aria-controls') === target;
+      t.classList.toggle('is-active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    panels.forEach(function (p) {
+      p.classList.toggle('is-active', p.id === target);
+    });
+    history.replaceState(null, '', '#' + target.replace('panel-', ''));
+  }
+
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      activateTab(tab.getAttribute('aria-controls'));
+    });
+  });
+
+  var hash = location.hash.replace('#', '');
+  if (hash && document.getElementById('panel-' + hash)) {
+    activateTab('panel-' + hash);
+  }
+
+  /* ── DataTables ───────────────────────────────────────── */
+  if (!document.getElementById('vild-table')) return;
+
+  var table = $('#vild-table').DataTable({
+    responsive: true,
+    scrollX: false,
+    autoWidth: false,
+    pageLength: 25,
+    dom: 'Blfrtip',
+    buttons: [
+      { extend: 'csvHtml5',   text: 'CSV',   className: 'dt-button' },
+      { extend: 'excelHtml5', text: 'Excel', className: 'dt-button' },
+      { extend: 'print',      text: 'Print', className: 'dt-button' },
+    ],
+    columnDefs: [
+      /* Always in child row — technical/secondary, never in main table */
+      { className: 'none', targets: [3, 7, 8, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22] },
+      /* Desktop only (≥768px): Verbal image EN, Author, Text, Genre, Senses, Metaphor */
+      { className: 'min-tablet-p', targets: [1, 4, 5, 6, 10, 12] },
+      /* Mobile only (≤480px): Verbal image + co-text, Full comment */
+      { className: 'max-mobile-l', targets: [2, 9] },
+      /* Id: always visible on all screen sizes */
+      { className: 'all', targets: [0] },
+    ],
+    language: {
+      search:     'Search:',
+      lengthMenu: 'Show _MENU_',
+      info:       '_START_–_END_ of _TOTAL_ verbal images',
+      infoEmpty:  '0 verbal images',
+      infoFiltered: '(filtered from _MAX_)',
+    }
+  });
+
+}());
+</script>
+{% endblock %}

@@ -48,7 +48,7 @@ class ProjectsIndexPage(Page):
         FieldPanel("intro"),
     ]
 
-    subpage_types = ["projects.ProjectPage"]
+    subpage_types = ["projects.ProjectPage", "projects.VerbalImagesPage"]
 
     def get_context(self, request, *args, **kwargs):
         context = super().get_context(request, *args, **kwargs)
@@ -66,6 +66,7 @@ class ProjectsIndexPage(Page):
         if project_type:
             projects = projects.filter(project_type=project_type)
         context["projects"] = projects
+        context["verbal_image_pages"] = VerbalImagesPage.objects.child_of(self).live()
         context["query"] = query
         context["years"] = (
             ProjectPage.objects.child_of(self)
@@ -205,3 +206,59 @@ class ProjectPage(Page):
 
     class Meta:
         verbose_name = "Project"
+
+
+class VerbalImagesPage(Page):
+    """Verbal Images in Literature Database — project page with tabbed interface."""
+
+    year = models.IntegerField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20, choices=ProjectPage.STATUS_CHOICES, blank=True, default="ongoing"
+    )
+    project_type = models.CharField(
+        max_length=50, choices=ProjectPage.TYPE_CHOICES, blank=True, default="research"
+    )
+    intro = models.TextField(blank=True, max_length=500)
+    featured_image = models.ForeignKey(
+        "wagtailimages.Image",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
+
+    content_panels = Page.content_panels + [
+        MultiFieldPanel(
+            [FieldPanel("year"), FieldPanel("status"), FieldPanel("project_type")],
+            heading="Project info",
+        ),
+        FieldPanel("intro"),
+        FieldPanel("featured_image"),
+    ]
+
+    parent_page_types = ["projects.ProjectsIndexPage"]
+    subpage_types = []
+
+    def get_context(self, request, *args, **kwargs):
+        import csv
+        import os
+
+        from django.conf import settings
+
+        context = super().get_context(request, *args, **kwargs)
+        csv_path = os.path.join(settings.BASE_DIR, "data", "verbalimages", "database.csv")
+        headers, rows = [], []
+        try:
+            with open(csv_path, encoding="utf-8") as f:
+                reader = csv.reader(f, delimiter=";")
+                headers = next(reader)
+                rows = list(reader)
+        except (FileNotFoundError, StopIteration):
+            pass
+        context["csv_headers"] = headers
+        context["csv_rows"] = rows
+        context["active_tab"] = request.GET.get("tab", "database")
+        return context
+
+    class Meta:
+        verbose_name = "Verbal Images Database"

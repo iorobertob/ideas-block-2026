@@ -24,7 +24,7 @@ The aesthetic direction is dark editorial — comparable to Serpentine Gallery, 
 | Backend | Django 5.2 | Python, ORM, i18n, batteries-included |
 | CMS | Wagtail 6.4 | Editorial admin, StreamField, page tree, used by cultural orgs worldwide |
 | Database | SQLite (dev) / PostgreSQL (production) | Simple locally, robust in production |
-| Static files | WhiteNoise (production) | No separate static server needed |
+| Static files | Apache (cPanel) / Nginx (VPS) | Served directly without touching Python |
 | Payments | Stripe | Ticket sales + recurring supporter subscriptions |
 | Analytics | Plausible | Privacy-first, GDPR-compliant, no consent banner needed |
 | Email | Django SMTP / console (dev) | Ticket confirmations, contact form |
@@ -276,6 +276,7 @@ python manage.py createsuperuser    # or: changepassword admin
 ### 4. Run the development server
 
 ```bash
+source venv/bin/activate
 python manage.py runserver 0.0.0.0:8000
 ```
 
@@ -478,7 +479,7 @@ This is the simplest deployment path — no server administration required. Name
 
 **Files already in the repo for this:**
 - `passenger_wsgi.py` — Passenger entry point (place manually in app root, outside the repo)
-- `ideas_block/settings/cpanel.py` — cPanel-specific settings (SQLite, Apache-served static)
+- `ideas_block/settings/cpanel.py` — cPanel-specific settings (SQLite, Apache-served static/media)
 
 ### Directory layout on the server
 
@@ -487,28 +488,45 @@ This is the simplest deployment path — no server administration required. Name
     passenger_wsgi.py           ← copied manually from the repo (Step 3)
     .env                        ← created manually (Step 4) — never in git
     db.sqlite3                  ← transferred from local (Step 6) — never in git
+    errors.log                  ← Django error log (auto-created)
+    public/                     ← served directly by Apache (no Python involved)
+        static/                 ← populated by collectstatic (Step 7)
+        media/                  ← populated by rsync (Step 8)
     git/                        ← the cloned repository (Step 3)
         manage.py
         requirements.txt
         passenger_wsgi.py       ← source copy lives here in git
-        static/                 ← populated by collectstatic (Step 7)
-        media/                  ← populated by rsync (Step 8)
         ideas_block/
         templates/
         ...
 ```
 
-`.env` and `db.sqlite3` live in the application root, **outside** the git repo — they are never committed. `static/` and `media/` live inside `git/` and are served by WhiteNoise through Passenger — no `public_html` involvement.
+`.env` and `db.sqlite3` live in the application root, **outside** the git repo — they are never committed. Static and media files live in `public/` (also outside git) and are served directly by Apache without touching Python.
 
 ### Constraints vs. VPS
 
 | | VPS / Docker | cPanel shared |
 |---|---|---|
-| Database | PostgreSQL | SQLite (stored outside `public_html`) |
-| Static files | WhiteNoise / Nginx | WhiteNoise via Passenger (`git/static/`) |
+| Database | PostgreSQL | SQLite (stored in app root, outside git) |
+| Static files | Nginx | Apache serves `public/static/` directly |
+| Media files | Nginx | Apache serves `public/media/` directly |
 | Process manager | systemd / Docker | Passenger (managed by cPanel) |
 | SSL | Certbot | AutoSSL (one click in cPanel) |
 | SSH access | Full root | Yes, but no sudo |
+
+---
+
+### ⚠️ Critical rule — always pass `--settings`
+
+**Every** `manage.py` command on the server must include `--settings=ideas_block.settings.cpanel`. Without it, Django uses base settings, connects to `git/db.sqlite3` (wrong database), and may create an empty file there.
+
+```bash
+# ✓ correct
+python manage.py migrate --settings=ideas_block.settings.cpanel
+
+# ✗ wrong — hits the wrong database
+python manage.py migrate
+```
 
 ---
 
@@ -525,7 +543,7 @@ cPanel → **SSH Access** → enable SSH and add your public key. All subsequent
 
 | Field | Value |
 |---|---|
-| Python version | `3.12` (or highest available) |
+| Python version | `3.13` (or highest available) |
 | Application root | `ideas_block` *(folder in your home dir — cPanel creates it)* |
 | Application URL | `ideas-block.com` |
 | Application startup file | `passenger_wsgi.py` |
@@ -546,7 +564,9 @@ git clone <repo-url> git
 cp ~/ideas_block/git/passenger_wsgi.py ~/ideas_block/passenger_wsgi.py
 ```
 
-`passenger_wsgi.py` must sit directly in `~/ideas_block/` (the app root), not inside the `git/` subfolder. The copy in `git/` is just the source that lives in version control.
+`passenger_wsgi.py` must sit directly in `~/ideas_block/` (the app root), not inside `git/`. The copy in `git/` is just the source in version control.
+
+> **Why not symlink?** cPanel's Passenger requires the file to physically exist in the app root.
 
 ---
 
@@ -561,7 +581,6 @@ nano ~/ideas_block/.env
 Set at minimum:
 
 ```env
-DJANGO_SETTINGS_MODULE=ideas_block.settings.cpanel
 DJANGO_SECRET_KEY=<generate one — see .env.example>
 SITE_URL=https://ideas-block.com
 ALLOWED_HOSTS=ideas-block.com,www.ideas-block.com
@@ -576,7 +595,7 @@ MAILERLITE_API_KEY=<your token>
 PLAUSIBLE_DOMAIN=ideas-block.com
 ```
 
-> Find your cPanel username in cPanel → General Information, or run `whoami` via SSH.
+> `DJANGO_SETTINGS_MODULE` is hardcoded in `passenger_wsgi.py` and does not need to be in `.env`.
 
 ---
 
@@ -584,7 +603,7 @@ PLAUSIBLE_DOMAIN=ideas-block.com
 
 ```bash
 # Activate the virtualenv cPanel created (command shown in Setup Python App)
-source /home/<username>/virtualenv/ideas_block/3.12/bin/activate
+source /home/<username>/virtualenv/ideas_block/3.13/bin/activate
 
 pip install -r ~/ideas_block/git/requirements.txt
 ```
@@ -614,32 +633,42 @@ python manage.py migrate --settings=ideas_block.settings.cpanel
 ```bash
 # On the server (virtualenv activated)
 cd ~/ideas_block/git
+mkdir -p ~/ideas_block/public
 python manage.py collectstatic --noinput --settings=ideas_block.settings.cpanel
 ```
 
-This writes all static files to `~/ideas_block/git/static/`. WhiteNoise serves them via Passenger — no `public_html` step needed.
+This writes all static files (with content-hash filenames) to `~/ideas_block/public/static/`. Apache serves them directly — no Python involved.
+
+> **Must run before disabling DEBUG.** `ManifestStaticFilesStorage` requires `staticfiles.json` to exist in `STATIC_ROOT`. Without it, every page render raises a `ValueError` and returns a 500.
 
 ---
 
 ### Step 8 — Upload media files
 
 ```bash
-# From your local machine — initial upload (~6.5 GB, run once)
+# From your local machine — initial upload
 rsync -avz --progress \
   /Users/selves/Documents/ROBERTO/WORKS/DEVELOPMENT/IDEAS-BLOCK/new_website/media/ \
-  <username>@<server>:~/ideas_block/git/media/
+  <username>@<server>:~/ideas_block/public/media/
 
 # Subsequent syncs — only new/changed files
 rsync -avz --update --checksum \
   /Users/selves/Documents/ROBERTO/WORKS/DEVELOPMENT/IDEAS-BLOCK/new_website/media/ \
-  <username>@<server>:~/ideas_block/git/media/
+  <username>@<server>:~/ideas_block/public/media/
 ```
 
-> **Bandwidth tip:** Skip the `images/` renditions folder (3.3 GB) — Wagtail regenerates them on demand:
+After uploading, fix permissions so Apache can read the files:
+
+```bash
+find ~/ideas_block/public/media/ -type d -exec chmod 755 {} \;
+find ~/ideas_block/public/media/ -type f -exec chmod 644 {} \;
+```
+
+> **Skipped the `images/` renditions folder?** Wagtail can regenerate them:
 > ```bash
-> rsync -avz media/original_images/ <username>@<server>:~/ideas_block/git/media/original_images/
-> rsync -avz media/documents/       <username>@<server>:~/ideas_block/git/media/documents/
+> python manage.py wagtail_update_image_renditions --settings=ideas_block.settings.cpanel
 > ```
+> Run it multiple times until the processed count stabilises — some renditions depend on others.
 
 ---
 
@@ -664,19 +693,18 @@ cPanel → **Security** → **SSL/TLS** → **AutoSSL** → run for your domain.
 ### Updating after code changes
 
 ```bash
-# On the server (via SSH)
+# On the server (via SSH, virtualenv activated)
 cd ~/ideas_block/git
 git pull
 
-source /home/<username>/virtualenv/ideas_block/3.12/bin/activate
-pip install -r requirements.txt                                          # if dependencies changed
-python manage.py migrate --settings=ideas_block.settings.cpanel          # if models changed
-python manage.py collectstatic --noinput --settings=ideas_block.settings.cpanel
+pip install -r requirements.txt                                                    # if dependencies changed
+python manage.py migrate --settings=ideas_block.settings.cpanel                   # if models changed
+python manage.py collectstatic --noinput --settings=ideas_block.settings.cpanel   # always
 
 # If passenger_wsgi.py changed in the repo, copy it to the app root again
 cp ~/ideas_block/git/passenger_wsgi.py ~/ideas_block/passenger_wsgi.py
 
-touch ~/ideas_block/tmp/restart.txt                                      # reload Passenger
+touch ~/ideas_block/tmp/restart.txt   # reload Passenger
 ```
 
 ---
@@ -685,12 +713,16 @@ touch ~/ideas_block/tmp/restart.txt                                      # reloa
 
 | Problem | Fix |
 |---|---|
-| 500 error on all pages | Check `~/logs/` or cPanel → **Errors** for the Passenger traceback |
+| 500 on all pages after deploy | Run `collectstatic` — `staticfiles.json` manifest is missing |
+| 500 on all pages — other | Check `~/ideas_block/errors.log` for the actual traceback |
+| `no such table` errors | You ran `manage.py` without `--settings=ideas_block.settings.cpanel` — it hit the wrong DB. Always pass `--settings`. |
+| Wrong DB after correct settings | Check for a stale empty `git/db.sqlite3` and delete it: `rm ~/ideas_block/git/db.sqlite3` |
 | `SECRET_KEY` not found | Confirm `.env` is at `~/ideas_block/.env` (not inside `git/`) |
-| Static files 404 | Confirm `collectstatic` ran and `~/ideas_block/git/static/` exists |
-| Media files 404 | Confirm rsync completed and `~/ideas_block/git/media/` exists |
+| Static files 404 | Confirm `collectstatic` ran: `ls ~/ideas_block/public/static/` |
+| Media files 404 | Confirm rsync completed and permissions are correct (see Step 8) |
 | `ModuleNotFoundError` | Confirm virtualenv is activated and `pip install -r requirements.txt` ran |
 | App won't restart | Passenger can take 30–60 s; hard-restart via cPanel Setup Python App |
+| Settings module ignored | cPanel can inject `DJANGO_SETTINGS_MODULE` into Passenger's env, overriding `.env`. `passenger_wsgi.py` uses a hard assignment (not `setdefault`) to prevent this. If you see base-settings behaviour on the live site, re-copy `passenger_wsgi.py` from git to the app root. |
 
 ---
 
