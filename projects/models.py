@@ -133,6 +133,10 @@ class ProjectPage(Page):
         on_delete=models.SET_NULL,
         related_name="+",
     )
+    show_featured_image = models.BooleanField(
+        default=True,
+        help_text="Show the featured image at the top of the page.",
+    )
     external_url = models.URLField(blank=True, help_text="Project website or documentation link.")
     gallery = StreamField(
         [
@@ -183,6 +187,7 @@ class ProjectPage(Page):
         ], heading="Project info"),
         FieldPanel("intro"),
         FieldPanel("featured_image"),
+        FieldPanel("show_featured_image"),
         InlinePanel("participants", heading="Participants", label="Person"),
         FieldPanel("collaborators"),
         FieldPanel("related_posts_filter"),
@@ -226,6 +231,10 @@ class VerbalImagesPage(Page):
         on_delete=models.SET_NULL,
         related_name="+",
     )
+    show_featured_image = models.BooleanField(
+        default=True,
+        help_text="Show the featured image at the top of the page.",
+    )
 
     content_panels = Page.content_panels + [
         MultiFieldPanel(
@@ -234,6 +243,7 @@ class VerbalImagesPage(Page):
         ),
         FieldPanel("intro"),
         FieldPanel("featured_image"),
+        FieldPanel("show_featured_image"),
     ]
 
     parent_page_types = ["projects.ProjectsIndexPage"]

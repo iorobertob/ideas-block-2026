@@ -15,7 +15,7 @@
     </div>
   </div>
 
-  {% if page.featured_image %}
+  {% if page.featured_image and page.show_featured_image %}
     <div class="container">
       {% image page.featured_image width-1200 as img %}
       <img src="{{ img.url }}" alt="{{ page.title }}" class="featured-image">
